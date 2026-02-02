@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boaz Studio - Ultimate Hub</title>
+    <title>Boaz Bouzouki Hub</title>
     <style>
         :root { --bg:#121212; --card-bg:#1e1e1e; --gold:#ffb300; --text:#eee; }
-        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 20px; box-sizing: border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding: 20px; box-sizing: border-box; }
         
-        h1 { font-size:2.5rem; margin-bottom:5px; background:linear-gradient(to right,#ffb300,#ffca28); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; letter-spacing:2px; text-align: center; }
-        p.subtitle { color:#888; margin-bottom:30px; font-size:1.1rem; text-align: center; }
+        h1 { font-size:2.2rem; margin-bottom:5px; background:linear-gradient(to right,#ffb300,#ffca28); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-transform:uppercase; letter-spacing:2px; text-align: center; }
+        p.subtitle { color:#888; margin-bottom:30px; font-size:1rem; text-align: center; }
         
+        /* כותרות למדורים */
+        .section-title { width: 100%; max-width: 800px; color: #666; font-size: 0.9rem; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
         .grid-container { 
             display:grid; 
-            grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); 
+            grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); 
             gap:15px; 
-            max-width:1000px; width:100%; 
+            max-width:800px; width:100%; 
         }
         
         /* עיצוב כרטיסים */
@@ -23,71 +26,89 @@
             background:var(--card-bg); border:1px solid #333; border-radius:12px; padding:20px; 
             text-align:center; cursor:pointer; transition:0.3s; text-decoration:none; color:var(--text); 
             display:flex; flex-direction:column; align-items:center; justify-content: center;
-            box-shadow:0 4px 6px rgba(0,0,0,0.3); min-height: 140px;
+            box-shadow:0 4px 6px rgba(0,0,0,0.3); min-height: 130px; position: relative; overflow: hidden;
         }
         .card:hover { transform:translateY(-5px); border-color:var(--gold); box-shadow:0 10px 20px rgba(255,179,0,0.15); }
         
-        .icon { font-size:3rem; margin-bottom:10px; display:block; }
-        .card h2 { margin:0; font-size:1.2rem; color: #fff; }
-        .card p { color:#aaa; font-size:0.8rem; margin:5px 0 0 0; }
+        .icon { font-size:2.5rem; margin-bottom:10px; display:block; }
+        .card h2 { margin:0; font-size:1.1rem; color: #fff; font-weight: bold; }
+        .card p { color:#aaa; font-size:0.75rem; margin:5px 0 0 0; }
 
-        /* כרטיסים גדולים (כלים ראשיים) */
-        .card.main-tool { grid-column: span 2; background: #263238; border-color: #455a64; }
-        .card.composer { grid-column: 1 / -1; background: linear-gradient(135deg, #1e1e1e 0%, #3e2723 100%); border: 1px solid #ffb300; }
-        .card.composer .icon { animation: float 3s ease-in-out infinite; }
+        /* בוזוקי - הכי חשוב */
+        .card.bouzouki-main { 
+            grid-column: 1 / -1; /* תופס את כל הרוחב */
+            background: linear-gradient(135deg, #263238 0%, #1a1a1a 100%); 
+            border: 2px solid #ffb300; 
+            min-height: 160px;
+        }
+        .card.bouzouki-main .icon { font-size: 4rem; animation: pulse 3s infinite; }
+        .card.bouzouki-main h2 { font-size: 1.8rem; color: #ffb300; }
 
-        /* כרטיסי עזר (טיונר/מטרונום) */
-        .card.util { border-color: #555; background: #1a1a1a; }
+        /* כלים שימושיים */
+        .card.util { border-top: 3px solid #78909c; }
+        
+        /* הלחנה */
+        .card.composer { border-top: 3px solid #d32f2f; }
 
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-        @media (max-width: 600px) { .card.main-tool { grid-column: span 1; } }
+        /* בונוס */
+        .card.bonus { opacity: 0.8; border: 1px dashed #444; }
+        .card.bonus:hover { opacity: 1; border-style: solid; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
         footer { margin-top:40px; color:#444; font-size:0.8rem; }
     </style>
 </head>
 <body>
 
-    <h1>Boaz Music Studio</h1>
-    <p class="subtitle">האולפן הדיגיטלי המלא</p>
+    <h1>Boaz Bouzouki Pro</h1>
+    <p class="subtitle">האולפן הדיגיטלי לנגן הבוזוקי</p>
 
+    <div class="section-title">הכלי שלי</div>
     <div class="grid-container">
-        <a href="composer.html" class="card composer">
-            <span class="icon">🎼</span>
-            <h2>The Composer Pro</h2>
-            <p>הלחנה, תרגום, כתיבת תווים והדפסה</p>
-        </a>
-
-        <a href="bouzouki.html" class="card main-tool">
+        <a href="bouzouki.html" class="card bouzouki-main">
             <span class="icon">🪕</span>
-            <h2>Bouzouki</h2>
-            <p>רבעי טונים ומקצבים</p>
-        </a>
-
-        <a href="guitar.html" class="card main-tool">
-            <span class="icon">🎸</span>
-            <h2>Guitar</h2>
-            <p>אקורדים ומיתרים</p>
-        </a>
-
-        <a href="piano.html" class="card main-tool">
-            <span class="icon">🎹</span>
-            <h2>Piano</h2>
-            <p>הרמוניה והיפוכים</p>
-        </a>
-
-        <a href="tuner.html" class="card util" style="border-bottom: 4px solid #4caf50;">
-            <span class="icon">🎤</span>
-            <h2>Tuner</h2>
-            <p>כיוון כלים</p>
-        </a>
-
-        <a href="metronome.html" class="card util" style="border-bottom: 4px solid #f44336;">
-            <span class="icon">⏱️</span>
-            <h2>Metronome</h2>
-            <p>אימון קצב</p>
+            <h2>Bouzouki Studio</h2>
+            <p>סימולטור, רבעי טונים, מקאמים ומכונת קצב</p>
         </a>
     </div>
 
-    <footer>v4.0 Complete Suite</footer>
+    <div class="section-title">ארגז כלים לנגן</div>
+    <div class="grid-container">
+        <a href="tuner.html" class="card util">
+            <span class="icon">🎤</span>
+            <h2>טיונר (Tuner)</h2>
+            <p>כיוון מדויק לבוזוקי</p>
+        </a>
+
+        <a href="metronome.html" class="card util">
+            <span class="icon">⏱️</span>
+            <h2>מקצבים (Rhythms)</h2>
+            <p>מטרונום ומקצבים יווניים</p>
+        </a>
+
+        <a href="composer.html" class="card composer">
+            <span class="icon">🎼</span>
+            <h2>מחברת תווים</h2>
+            <p>כתיבה, הלחנה קולית והדפסה</p>
+        </a>
+    </div>
+
+    <div class="section-title">כלים נוספים (Bonus)</div>
+    <div class="grid-container">
+        <a href="guitar.html" class="card bonus">
+            <span class="icon">🎸</span>
+            <h2>גיטרה</h2>
+            <p>אקורדים וליווי</p>
+        </a>
+
+        <a href="piano.html" class="card bonus">
+            <span class="icon">🎹</span>
+            <h2>פסנתר</h2>
+            <p>הרמוניה והיפוכים</p>
+        </a>
+    </div>
+
+    <footer>v5.0 Bouzouki Edition</footer>
 </body>
 </html>
