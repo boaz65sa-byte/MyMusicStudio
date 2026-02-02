@@ -3,19 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1000, initial-scale=1">
-    <title>Boaz Composer V46 - Connected</title>
+    <title>Boaz Composer V45 - Print Fixed</title>
     <style>
         body { background:#121212; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; padding:10px; display:flex; flex-direction:column; align-items:center; }
         * { box-sizing:border-box; user-select:none; }
 
-        /* Top Nav */
-        .top-nav { width: 960px; display: flex; gap: 10px; margin-bottom: 10px; justify-content: flex-end; }
-        .nav-btn { text-decoration:none; font-size:16px; background:#333; color:white; padding:5px 12px; border-radius:4px; border:1px solid #555; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .nav-btn:hover { background: #555; border-color: #fff; }
-
         h1 { margin: 5px 0; color: #ffb300; text-transform: uppercase; letter-spacing: 2px; font-size: 18px; }
         
-        /* Toolbar */
+        /* --- Toolbar --- */
         .toolbar {
             width: 960px; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #444;
             display: flex; gap: 10px; align-items: center; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); flex-wrap: wrap;
@@ -37,24 +32,31 @@
         .bpm-control { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #aaa; background: #222; padding: 5px 10px; border-radius: 4px; border: 1px solid #444; }
         input[type=range] { width: 100px; height: 5px; }
 
-        /* Notation Area */
+        /* --- Notation Area --- */
         .sheet-wrapper { width: 960px; overflow-x: auto; background: #fff; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.1); border: 4px solid #333; position: relative; }
-        .notation-panel { min-width: 960px; position: relative; }
-        svg { display: block; }
+        
+        .notation-panel { 
+            min-width: 960px; position: relative; 
+            /* הסרתי גובה קבוע ב-CSS כדי שה-SVG ישלוט */
+        }
+        
+        svg { display: block; } /* הוסר width/height 100% כדי למנוע מתיחה לא נכונה בהדפסה */
         
         .staff-line { stroke: #444; stroke-width: 1; }
         .tab-line { stroke: #666; stroke-width: 1; }
         text { font-family: serif; fill: #000; text-anchor: middle; font-weight: bold; cursor: default; }
         .note-head { fill: #000; stroke: #000; cursor: pointer; transition: fill 0.2s; }
         .note-head:hover { fill: #2196f3; stroke: #2196f3; }
+        
         .stem { stroke: #000; stroke-width: 2; pointer-events: none; }
         .pick-sign { font-size: 20px; font-weight: bold; cursor: pointer; }
         .pick-sign:hover { fill: #d32f2f; }
+        
         .section-lbl { font-size: 14px; fill: #d32f2f; font-family: sans-serif; text-anchor: start; font-weight: bold; }
 
         #playCursor { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255, 0, 0, 0.5); pointer-events: none; display: none; z-index: 100; transition: left 0.1s linear; }
 
-        /* Instruments */
+        /* --- Instruments --- */
         .inst-label { width: 960px; text-align: right; color: #ffb300; font-size: 12px; margin-bottom: 2px; font-weight: bold; border-bottom: 1px solid #333; margin-top: 5px;}
         .instrument { position: relative; width: 960px; margin-bottom: 5px; background: #0a0a0a; border: 2px solid #333; border-radius: 6px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: height 0.3s, opacity 0.3s; }
         
@@ -75,6 +77,7 @@
 
         /* Markers */
         .marker { position: absolute; width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 11px; font-weight: bold; transform: translate(-50%, -50%); z-index: 10; background: #222; border: 1px solid #444; color: #888; }
+        
         .bz-marker { background: #333; color: white; border: 1px solid #666; opacity: 1; }
         .bz-marker:hover { background: #ffb300; color: black; z-index: 60; transform: translate(-50%, -50%) scale(1.3); }
         .gtr-marker { background: #1a1005; color: #777; border: none; opacity: 0.8; font-size: 10px; }
@@ -89,11 +92,20 @@
         .click-zone:hover { background: rgba(255, 255, 255, 0.1); }
         #fileInput { display: none; }
 
+        /* --- PRINT Styles --- */
         @media print {
             body { background: white; padding: 0; }
-            h1, .top-nav, .toolbar, .inst-label, .instrument, #playCursor { display: none !important; }
-            .sheet-wrapper { box-shadow: none; border: none; width: 100%; margin: 0; overflow: visible; position: absolute; top: 0; left: 0; }
-            .notation-panel { width: 100% !important; border: none; }
+            h1, .toolbar, .inst-label, .instrument, #playCursor { display: none !important; }
+            /* הסרת מסגרות ורקעים מיותרים */
+            .sheet-wrapper { 
+                box-shadow: none; border: none; 
+                width: 100%; margin: 0; padding: 0; 
+                overflow: visible; position: absolute; top: 0; left: 0; 
+            }
+            .notation-panel { 
+                width: 100% !important; border: none; 
+            }
+            /* וידוא שה-SVG נפרס במלואו */
             svg { width: 100%; height: auto; }
             @page { size: landscape; margin: 1cm; }
         }
@@ -101,13 +113,7 @@
 </head>
 <body>
 
-    <div class="top-nav">
-        <button class="nav-btn" onclick="window.open('tuner.html','T','width=400,height=600')">🎤 טיונר</button>
-        <button class="nav-btn" onclick="window.open('metronome.html','M','width=400,height=600')">⏱️ מטרונום</button>
-        <a href="index.html" class="nav-btn" style="background:#d32f2f;">🏠 יציאה</a>
-    </div>
-
-    <h1>Boaz Studio: Composer V46</h1>
+    <h1>Boaz Studio: Composer V45</h1>
 
     <div class="toolbar">
         <input type="text" id="txtInput" placeholder='Do Re Mi...'>
@@ -138,11 +144,11 @@
         
         <div style="flex:1"></div>
         
-        <label style="font-size:12px; color:#aaa;">הדפסה:</label>
+        <label style="font-size:12px; color:#aaa;">תצוגה:</label>
         <select id="scoreLayout" onchange="renderSheet()">
-            <option value="all">מלא</option>
-            <option value="bz">בוזוקי</option>
-            <option value="gtr">גיטרה</option>
+            <option value="all">הכל (בוזוקי+גיטרה)</option>
+            <option value="bz">בוזוקי + חמשה</option>
+            <option value="gtr">גיטרה + חמשה</option>
         </select>
 
         <button class="btn-white" onclick="window.print()">🖨 PDF</button>
@@ -187,46 +193,107 @@
 
     function changeFocus() {
         let mode = document.getElementById('focusSelect').value;
-        const els = [ { id: 'inst-bz', l: 'lbl-bz', k: 'bouzouki' }, { id: 'inst-gtr', l: 'lbl-gtr', k: 'guitar' }, { id: 'inst-pno', l: 'lbl-pno', k: 'piano' } ];
-        els.forEach(o => { let el = document.getElementById(o.id); let lbl = document.getElementById(o.l); if(mode === 'all' || mode === o.k) { el.classList.remove('hidden-inst'); lbl.classList.remove('hidden-lbl'); } else { el.classList.add('hidden-inst'); lbl.classList.add('hidden-lbl'); } });
+        const els = [
+            { id: 'inst-bz', l: 'lbl-bz', k: 'bouzouki' },
+            { id: 'inst-gtr', l: 'lbl-gtr', k: 'guitar' },
+            { id: 'inst-pno', l: 'lbl-pno', k: 'piano' }
+        ];
+        els.forEach(o => {
+            let el = document.getElementById(o.id); let lbl = document.getElementById(o.l);
+            if(mode === 'all' || mode === o.k) {
+                el.classList.remove('hidden-inst'); lbl.classList.remove('hidden-lbl');
+            } else {
+                el.classList.add('hidden-inst'); lbl.classList.add('hidden-lbl');
+            }
+        });
     }
 
     function buildBouzouki() {
         const board = document.getElementById('inst-bz');
-        for(let f=0; f<=20; f++) { let d = document.createElement('div'); d.className='fret'; d.style.left=(f*4.8)+'%'; board.appendChild(d); if([3,5,7,9,12,15,17,19].includes(f)){ let n = document.createElement('div'); n.innerText = f; n.style.position='absolute'; n.style.bottom='2px'; n.style.left=(f*4.8+2.4)+'%'; n.style.color='#888'; n.style.fontSize='10px'; n.style.transform='translateX(-50%)'; board.appendChild(n); } }
-        for(let s=0; s<4; s++) { let str = document.createElement('div'); str.className='string'; str.style.top=(20+s*20)+'%'; board.appendChild(str); for(let f=0; f<=20; f++) { let realStrIdx = 3 - s; let noteVal = BZ_STRINGS[realStrIdx] + f; let noteName = NOTES[noteVal % 12]; let btn = document.createElement('div'); btn.className = 'marker bz-marker'; btn.id = `bz-${realStrIdx}-${f}`; btn.innerText = noteName; btn.style.left = (f*4.8+2.4)+'%'; btn.style.top = (20+s*20)+'%'; board.appendChild(btn); let zone = document.createElement('div'); zone.className = 'click-zone'; zone.style.left = (f*4.8)+'%'; zone.style.top = (s*25)+'%'; zone.onclick = (e) => { e.stopPropagation(); addNote(noteVal, realStrIdx, f); }; board.appendChild(zone); } }
+        for(let f=0; f<=20; f++) {
+            let div = document.createElement('div'); div.className='fret'; div.style.left=(f*4.8)+'%'; board.appendChild(div);
+            if([3,5,7,9,12,15,17,19].includes(f)){
+                let num = document.createElement('div'); num.innerText = f; num.style.position='absolute'; num.style.bottom='2px'; num.style.left=(f*4.8+2.4)+'%'; num.style.color='#888'; num.style.fontSize='10px'; num.style.transform='translateX(-50%)'; board.appendChild(num);
+            }
+        }
+        for(let s=0; s<4; s++) { 
+            let str = document.createElement('div'); str.className='string'; str.style.top=(20+s*20)+'%'; board.appendChild(str);
+            for(let f=0; f<=20; f++) {
+                let realStrIdx = 3 - s; let noteVal = BZ_STRINGS[realStrIdx] + f; let noteName = NOTES[noteVal % 12];
+                let btn = document.createElement('div'); btn.className = 'marker bz-marker'; btn.id = `bz-${realStrIdx}-${f}`; btn.innerText = noteName; btn.style.left = (f*4.8+2.4)+'%'; btn.style.top = (20+s*20)+'%'; board.appendChild(btn);
+                let zone = document.createElement('div'); zone.className = 'click-zone'; zone.style.left = (f*4.8)+'%'; zone.style.top = (s*25)+'%';
+                zone.onclick = (e) => { e.stopPropagation(); addNote(noteVal, realStrIdx, f); };
+                board.appendChild(zone);
+            }
+        }
     }
 
     function buildGuitar() {
         const board = document.getElementById('inst-gtr');
         for(let f=0; f<=20; f++) { let d=document.createElement('div'); d.className='fret'; d.style.left=(f*4.8)+'%'; board.appendChild(d); }
-        for(let s=0; s<6; s++) { let str=document.createElement('div'); str.className='string'; str.style.top=(10+s*15)+'%'; board.appendChild(str); for(let f=0; f<=20; f++) { let noteVal = GTR_STRINGS[5-s] + f; let mk = document.createElement('div'); mk.className = 'marker gtr-marker'; mk.id = 'gtr-' + noteVal; mk.innerText = NOTES[noteVal % 12]; mk.style.left = (f * 4.8 + 2.4) + '%'; mk.style.top = (10 + s * 15) + '%'; mk.style.cursor = 'pointer'; mk.onclick = (e) => { e.stopPropagation(); addNoteFromExternal(noteVal); }; board.appendChild(mk); } }
+        for(let s=0; s<6; s++) {
+            let str=document.createElement('div'); str.className='string'; str.style.top=(10+s*15)+'%'; board.appendChild(str);
+            for(let f=0; f<=20; f++) {
+                let noteVal = GTR_STRINGS[5-s] + f; let mk = document.createElement('div'); mk.className = 'marker gtr-marker'; mk.id = 'gtr-' + noteVal; mk.innerText = NOTES[noteVal % 12]; mk.style.left = (f * 4.8 + 2.4) + '%'; mk.style.top = (10 + s * 15) + '%';
+                mk.style.cursor = 'pointer'; mk.onclick = (e) => { e.stopPropagation(); addNoteFromExternal(noteVal); };
+                board.appendChild(mk);
+            }
+        }
     }
 
     function buildPiano() {
         const board = document.getElementById('inst-pno');
-        for(let i=0; i<40; i++) { let noteVal = PIANO_START + i; let noteIdx = noteVal % 12; let isBlack = [1,3,6,8,10].includes(noteIdx); if(!isBlack) { let key = document.createElement('div'); key.className='p-key-white'; let nextIsBlack = [1,3,6,8,10].includes((noteVal+1)%12); if(nextIsBlack) { let bKey = document.createElement('div'); bKey.className='p-key-black'; let mk = document.createElement('div'); mk.className='marker hidden-marker'; mk.id = 'pno-' + (noteVal+1); bKey.appendChild(mk); key.appendChild(bKey); i++; bKey.onmousedown = (e) => { e.stopPropagation(); addNoteFromExternal(noteVal+1); }; } let mk = document.createElement('div'); mk.className='marker hidden-marker'; mk.id = 'pno-' + noteVal; key.appendChild(mk); board.appendChild(key); key.onmousedown = (e) => { if(e.target===key || e.target===mk) { e.stopPropagation(); addNoteFromExternal(noteVal); } }; } }
+        for(let i=0; i<40; i++) {
+            let noteVal = PIANO_START + i; let noteIdx = noteVal % 12; let isBlack = [1,3,6,8,10].includes(noteIdx);
+            if(!isBlack) {
+                let key = document.createElement('div'); key.className='p-key-white';
+                let nextIsBlack = [1,3,6,8,10].includes((noteVal+1)%12);
+                if(nextIsBlack) {
+                    let bKey = document.createElement('div'); bKey.className='p-key-black';
+                    let mk = document.createElement('div'); mk.className='marker hidden-marker'; mk.id = 'pno-' + (noteVal+1); bKey.appendChild(mk); key.appendChild(bKey); i++;
+                    bKey.onmousedown = (e) => { e.stopPropagation(); addNoteFromExternal(noteVal+1); };
+                }
+                let mk = document.createElement('div'); mk.className='marker hidden-marker'; mk.id = 'pno-' + noteVal; key.appendChild(mk); board.appendChild(key);
+                key.onmousedown = (e) => { if(e.target===key || e.target===mk) { e.stopPropagation(); addNoteFromExternal(noteVal); } };
+            }
+        }
     }
 
-    function calcGuitarPos(midi) { for(let s=0; s<6; s++) { let openStr = GTR_STRINGS[s]; let fret = midi - openStr; if(fret >= 0 && fret <= 15) return { s: s, f: fret }; } return null; }
+    function calcGuitarPos(midi) {
+        for(let s=0; s<6; s++) { let openStr = GTR_STRINGS[s]; let fret = midi - openStr; if(fret >= 0 && fret <= 15) return { s: s, f: fret }; } return null;
+    }
     function addNoteFromExternal(midi) { let bestPos = findBestPosition(midi % 12, midi); if(bestPos) addNote(bestPos.midi, bestPos.string, bestPos.fret); else addNote(midi, 3, 0); }
     function togglePickDir() { currentPick = (currentPick === 'down') ? 'up' : 'down'; document.getElementById('pickDirBtn').innerText = (currentPick === 'down') ? 'Π' : 'V'; }
 
     function addNote(midi, stringIdx, fret) {
-        clearBoardHighlights(); let gtrPos = calcGuitarPos(midi);
+        clearBoardHighlights(); 
+        let gtrPos = calcGuitarPos(midi);
         let noteObj = { type: 'note', midi: midi, name: NOTES[midi % 12], string: stringIdx, fret: fret, gtrString: gtrPos ? gtrPos.s : null, gtrFret: gtrPos ? gtrPos.f : null, pick: currentPick };
         songData.push(noteObj); togglePickDir(); playSound(midi, 0.3); highlightInstruments(midi, 200); 
-        let bz = document.getElementById(`bz-${stringIdx}-${fret}`); if(bz) { bz.classList.remove('play-active'); void bz.offsetWidth; bz.classList.add('play-active'); setTimeout(() => bz.classList.remove('play-active'), 300); }
+        let bz = document.getElementById(`bz-${stringIdx}-${fret}`);
+        if(bz) { bz.classList.remove('play-active'); void bz.offsetWidth; bz.classList.add('play-active'); setTimeout(() => bz.classList.remove('play-active'), 300); }
         renderSheet(); scrollToEnd();
     }
 
     function addRest() { songData.push({ type: 'rest' }); renderSheet(); scrollToEnd(); }
     function undoLast() { if(songData.length>0) { songData.pop(); renderSheet(); } }
     function clearSong() { songData = []; playIndex=0; stopAndReset(); renderSheet(); }
-    function saveSong() { if(songData.length === 0) return alert("ריק!"); let name = prompt("שם השיר:", "MySong"); if(!name) return; let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(songData)); let dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", name + ".json"); dl.click(); }
-    function loadSong(input) { let file = input.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = function(e) { try { songData = JSON.parse(e.target.result); renderSheet(); alert("נטען!"); } catch(err) { alert("שגיאה"); } }; reader.readAsText(file); }
 
-    function togglePlay() { if(isPlaying) { clearTimeout(playTimeout); isPlaying = false; document.getElementById('playBtn').innerText = "▶ המשך"; document.getElementById('playBtn').classList.replace('btn-red','btn-green'); } else { if(songData.length === 0) return; if(playIndex >= songData.length) playIndex = 0; isPlaying = true; document.getElementById('playBtn').innerText = "⏸"; document.getElementById('playBtn').classList.replace('btn-green','btn-red'); playLoop(); } }
+    function saveSong() {
+        if(songData.length === 0) return alert("ריק!");
+        let name = prompt("שם השיר:", "MySong"); if(!name) return;
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(songData));
+        let dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", name + ".json"); dl.click();
+    }
+    function loadSong(input) {
+        let file = input.files[0]; if(!file) return;
+        let reader = new FileReader(); reader.onload = function(e) { try { songData = JSON.parse(e.target.result); renderSheet(); alert("נטען!"); } catch(err) { alert("שגיאה"); } }; reader.readAsText(file);
+    }
+
+    function togglePlay() {
+        if(isPlaying) { clearTimeout(playTimeout); isPlaying = false; document.getElementById('playBtn').innerText = "▶ המשך"; document.getElementById('playBtn').classList.replace('btn-red','btn-green'); } 
+        else { if(songData.length === 0) return; if(playIndex >= songData.length) playIndex = 0; isPlaying = true; document.getElementById('playBtn').innerText = "⏸"; document.getElementById('playBtn').classList.replace('btn-green','btn-red'); playLoop(); }
+    }
     function stopAndReset() { clearTimeout(playTimeout); isPlaying = false; playIndex = 0; document.getElementById('playBtn').innerText = "▶ נגן"; document.getElementById('playBtn').classList.replace('btn-red','btn-green'); document.getElementById('playCursor').style.display = 'none'; clearBoardHighlights(); }
 
     function playLoop() {
@@ -242,51 +309,90 @@
         playIndex++; playTimeout = setTimeout(playLoop, beatTime);
     }
 
-    function parseAndAdd() { let txt = document.getElementById('txtInput').value.toLowerCase().trim(); if(!txt) return; let parts = txt.split(/[\s,]+/); parts.forEach(p => { if(p === 'r' || p === 'rest') { addRest(); return; } let acc = p.includes('#') ? 1 : 0; let base = p.replace('#', ''); if(NOTE_MAP.hasOwnProperty(base)) { let noteIndex = (NOTE_MAP[base] + acc) % 12; let bestPos = findBestPosition(noteIndex); if(bestPos) addNote(bestPos.midi, bestPos.string, bestPos.fret); } }); document.getElementById('txtInput').value = ''; }
-    function findBestPosition(noteIndex, specificMidi = null) { if(specificMidi) { for(let s=3; s>=0; s--) { let base = BZ_STRINGS[s]; let fret = specificMidi - base; if(fret >= 0 && fret <= 20) return { midi: specificMidi, string: s, fret: fret }; } } for(let s=3; s>=0; s--) { let base = BZ_STRINGS[s]; for(let f=0; f<=12; f++) { if((base + f) % 12 === noteIndex) return { midi: base+f, string: s, fret: f }; } } return null; }
+    function parseAndAdd() {
+        let txt = document.getElementById('txtInput').value.toLowerCase().trim(); if(!txt) return;
+        let parts = txt.split(/[\s,]+/);
+        parts.forEach(p => {
+            if(p === 'r' || p === 'rest') { addRest(); return; }
+            let acc = p.includes('#') ? 1 : 0; let base = p.replace('#', '');
+            if(NOTE_MAP.hasOwnProperty(base)) { let noteIndex = (NOTE_MAP[base] + acc) % 12; let bestPos = findBestPosition(noteIndex); if(bestPos) addNote(bestPos.midi, bestPos.string, bestPos.fret); }
+        });
+        document.getElementById('txtInput').value = '';
+    }
 
+    function findBestPosition(noteIndex, specificMidi = null) {
+        if(specificMidi) { for(let s=3; s>=0; s--) { let base = BZ_STRINGS[s]; let fret = specificMidi - base; if(fret >= 0 && fret <= 20) return { midi: specificMidi, string: s, fret: fret }; } }
+        for(let s=3; s>=0; s--) { let base = BZ_STRINGS[s]; for(let f=0; f<=12; f++) { if((base + f) % 12 === noteIndex) return { midi: base+f, string: s, fret: f }; } }
+        return null;
+    }
+
+    // --- Render Logic (מתוקן להדפסה) ---
     function renderSheet() {
-        let layout = document.getElementById('scoreLayout').value;
+        let layout = document.getElementById('scoreLayout').value; // all, bz, gtr
         const svg = document.getElementById('mainSvg'); 
         let w = Math.max(960, START_X + songData.length * NOTE_SPACING + 100); 
-        let panelHeight = layout === 'all' ? 440 : 320;
+        
+        // חישוב גובה דינמי
+        let panelHeight = 220; // בסיס (חמשה)
+        if(layout === 'all') panelHeight = 440;
+        else panelHeight = 320; // רק חמשה + טאב אחד
+        
         const panel = document.getElementById('notationPanel');
-        panel.style.height = panelHeight + 'px'; panel.style.width = w + 'px';
-        svg.setAttribute('viewBox', `0 0 ${w} ${panelHeight}`); svg.setAttribute('height', panelHeight); svg.setAttribute('width', w);
+        panel.style.height = panelHeight + 'px';
+        panel.style.width = w + 'px';
+
+        // התיקון הקריטי להדפסה: הגדרת viewBox ומידות SVG
+        svg.setAttribute('viewBox', `0 0 ${w} ${panelHeight}`);
+        svg.setAttribute('height', panelHeight);
+        svg.setAttribute('width', w);
 
         let html = '';
+        
+        // 1. Staff (תמיד ב-100)
         for(let i=0; i<5; i++) { let y = STAFF_TOP_Y + i*10; html += `<line x1="20" y1="${y}" x2="${w-20}" y2="${y}" class="staff-line" />`; }
         html += `<text x="40" y="${STAFF_TOP_Y+35}" style="font-size: 60px;">🎼</text>`;
 
-        let drawBz = (layout === 'all' || layout === 'bz'); let drawGtr = (layout === 'all' || layout === 'gtr');
-        let bzY = 200; let gtrY = (layout === 'all') ? 320 : 200;
+        // משתנים למיקום הטאבים
+        let drawBz = (layout === 'all' || layout === 'bz');
+        let drawGtr = (layout === 'all' || layout === 'gtr');
+        
+        let bzY = 200; // ברירת מחדל
+        let gtrY = (layout === 'all') ? 320 : 200; // אם רק גיטרה, זה עולה למעלה
 
         if(drawBz) {
             html += `<text x="20" y="${bzY-15}" class="section-lbl">Bouzouki</text>`;
             for(let i=0; i<4; i++) { let y = bzY + i*20; html += `<text x="30" y="${y+5}" font-size="12" fill="#888">${['D','A','F','C'][i]}</text>`; html += `<line x1="50" y1="${y}" x2="${w-20}" y2="${y}" class="tab-line" />`; }
             html += `<line x1="50" y1="${STAFF_TOP_Y}" x2="50" y2="${bzY+60}" stroke="#000" stroke-width="2" />`;
         }
+
         if(drawGtr) {
             html += `<text x="20" y="${gtrY-15}" class="section-lbl">Guitar</text>`;
-            for(let i=0; i<6; i++) { let y = gtrY + i*20; html += `<text x="30" y="${y+5}" font-size="12" fill="#888">${['E','B','G','D','A','E'][i]}</text>`; html += `<line x1="50" y1="${y}" x2="${w-20}" y2="${y}" class="tab-line" />`; }
-            let topConnect = drawBz ? bzY+60 : STAFF_TOP_Y; html += `<line x1="50" y1="${topConnect}" x2="50" y2="${gtrY+100}" stroke="#000" stroke-width="2" />`;
+            const GTR_NAMES = ['E','B','G','D','A','E'];
+            for(let i=0; i<6; i++) { let y = gtrY + i*20; html += `<text x="30" y="${y+5}" font-size="12" fill="#888">${GTR_NAMES[i]}</text>`; html += `<line x1="50" y1="${y}" x2="${w-20}" y2="${y}" class="tab-line" />`; }
+            // הארכת הקו
+            let topConnect = drawBz ? bzY+60 : STAFF_TOP_Y;
+            html += `<line x1="50" y1="${topConnect}" x2="50" y2="${gtrY+100}" stroke="#000" stroke-width="2" />`;
         }
 
         songData.forEach((d, i) => {
             let x = START_X + i * NOTE_SPACING;
+            let clickEvt = d.type==='note' ? `onmousedown="showHint(${d.midi})"` : '';
+
             if(d.type === 'rest') {
                 html += `<rect x="${x-6}" y="${STAFF_TOP_Y+15}" width="12" height="10" fill="black" />`;
                 if(drawBz) html += `<text x="${x}" y="${bzY+30}" font-size="20" fill="#444">-</text>`;
                 if(drawGtr) html += `<text x="${x}" y="${gtrY+50}" font-size="20" fill="#444">-</text>`;
             } else {
+                // Staff
                 const mapC = {0:0, 1:0, 2:1, 3:1, 4:2, 5:3, 6:3, 7:4, 8:4, 9:5, 10:5, 11:6};
                 let octaveDiff = Math.floor(d.midi/12) - 4; let step = mapC[d.midi%12];
                 let finalY = (STAFF_TOP_Y + 50) - ((octaveDiff * 7 + step) * 5);
-                html += `<ellipse cx="${x}" cy="${finalY}" rx="6" ry="4" class="note-head" onmousedown="showHint(${d.midi})" />`;
+                html += `<ellipse cx="${x}" cy="${finalY}" rx="6" ry="4" class="note-head" ${clickEvt} />`;
                 html += `<line x1="${x+6}" y1="${finalY}" x2="${x+6}" y2="${finalY-30}" class="stem" />`;
                 if(d.name.includes('#')) html += `<text x="${x-12}" y="${finalY+5}" font-size="16">♯</text>`;
                 if(finalY >= STAFF_TOP_Y + 50) html += `<line x1="${x-10}" y1="${STAFF_TOP_Y+50}" x2="${x+10}" y2="${STAFF_TOP_Y+50}" stroke="#000" stroke-width="1" />`;
 
+                // Bz Tab
                 if(drawBz) {
                     let visualStrIdx = 3 - d.string; let tabY = bzY + visualStrIdx * 20;
                     html += `<rect x="${x-8}" y="${tabY-8}" width="16" height="16" fill="white" />`;
@@ -294,6 +400,8 @@
                     let pickSym = (d.pick === 'down') ? 'Π' : 'V'; let pickColor = (d.pick === 'down') ? 'black' : '#d32f2f';
                     html += `<text x="${x}" y="${bzY-10}" font-size="16" fill="${pickColor}" class="pick-sign" onclick="flipPick(${i})">${pickSym}</text>`;
                 }
+
+                // Gtr Tab
                 if(drawGtr && d.gtrString !== null) {
                     let gtrVisStr = 5 - d.gtrString; let gtrTabY = gtrY + gtrVisStr * 20;
                     html += `<rect x="${x-8}" y="${gtrTabY-8}" width="16" height="16" fill="white" />`;
@@ -307,7 +415,11 @@
     function showHint(midi) { highlightInstruments(midi, 1000); }
     function scrollToEnd() { setTimeout(() => { let w = document.getElementById('sheetWrapper'); w.scrollLeft = w.scrollWidth; }, 50); }
     function flipPick(index) { if(songData[index].type === 'note') { songData[index].pick = (songData[index].pick === 'down') ? 'up' : 'down'; renderSheet(); } }
-    function highlightInstruments(midi, duration) { document.querySelectorAll(`[id^='gtr-${midi}']`).forEach(el => { el.classList.add('gtr-active'); setTimeout(()=>el.classList.remove('gtr-active'), duration); }); let pno = document.getElementById('pno-'+midi); if(pno) { pno.classList.add('piano-active'); setTimeout(()=>pno.classList.remove('piano-active'), duration); } }
+
+    function highlightInstruments(midi, duration) {
+        document.querySelectorAll(`[id^='gtr-${midi}']`).forEach(el => { el.classList.add('gtr-active'); setTimeout(()=>el.classList.remove('gtr-active'), duration); });
+        let pno = document.getElementById('pno-'+midi); if(pno) { pno.classList.add('piano-active'); setTimeout(()=>pno.classList.remove('piano-active'), duration); }
+    }
     function clearBoardHighlights() { document.querySelectorAll('.marker').forEach(e => e.classList.remove('gtr-active', 'piano-active', 'play-active')); }
     function playSound(midi, duration) { const o = AUDIO.createOscillator(); const g = AUDIO.createGain(); o.type = 'triangle'; o.frequency.value = 440 * Math.pow(2, (midi-69)/12); g.gain.setValueAtTime(0.1, AUDIO.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AUDIO.currentTime + duration); o.connect(g); g.connect(AUDIO.destination); o.start(); o.stop(AUDIO.currentTime + duration); }
 </script>

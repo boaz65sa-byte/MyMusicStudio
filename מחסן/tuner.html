@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boaz Tuner Pro</title>
+    <style>
+        body { background: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        .tuner-body {
+            background: #1e1e1e; padding: 40px; border-radius: 20px; text-align: center;
+            border: 2px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.5); width: 350px; position: relative;
+        }
+
+        h1 { margin: 0 0 20px 0; color: #ffb300; text-transform: uppercase; letter-spacing: 2px; }
+
+        .note-display {
+            font-size: 100px; font-weight: bold; margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255, 179, 0, 0.3);
+            min-height: 120px; color: #fff;
+        }
+        
+        .frequency { font-size: 24px; color: #888; font-family: monospace; margin-bottom: 30px; }
+
+        /* המחט / מד */
+        .meter {
+            position: relative; width: 100%; height: 20px; background: #333;
+            border-radius: 10px; overflow: hidden; margin-bottom: 20px;
+        }
+        .center-line {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #fff; z-index: 5;
+        }
+        .needle {
+            position: absolute; top: 0; bottom: 0; width: 6px; background: #ffb300;
+            left: 50%; transform: translateX(-50%); transition: left 0.1s linear; border-radius: 3px;
+            box-shadow: 0 0 10px #ffb300;
+        }
+
+        .status { font-weight: bold; font-size: 18px; height: 24px; }
+        .in-tune { color: #4caf50; text-shadow: 0 0 10px #4caf50; }
+        .flat { color: #2196f3; } /* נמוך */
+        .sharp { color: #f44336; } /* גבוה */
+
+        button {
+            background: linear-gradient(to right, #ffb300, #ffca28); color: black; border: none;
+            padding: 15px 40px; font-size: 18px; font-weight: bold; border-radius: 30px;
+            cursor: pointer; margin-top: 20px; box-shadow: 0 5px 15px rgba(255, 179, 0, 0.3);
+        }
+        
+        .presets { margin-top: 20px; display: flex; gap: 5px; justify-content: center; }
+        .p-btn { background: #333; color: #aaa; padding: 5px 10px; font-size: 12px; border-radius: 4px; border: 1px solid #444; }
+        .p-btn:hover { color: white; border-color: white; }
+
+    </style>
+</head>
+<body>
+
+<div class="tuner-body">
+    <h1>Studio Tuner</h1>
+    
+    <div class="meter">
+        <div class="center-line"></div>
+        <div id="needle" class="needle"></div>
+    </div>
+    
+    <div id="note" class="note-display">--</div>
+    <div id="freq" class="frequency">0 Hz</div>
+    <div id="status" class="status">לחץ על התחל</div>
+
+    <button id="startBtn" onclick="startTuner()">🎤 הפעל מיקרופון</button>
+
+    <div class="presets">
+        <div class="p-btn">בוזוקי: C F A D</div>
+        <div class="p-btn">גיטרה: E A D G B E</div>
+    </div>
+</div>
+
+<script>
+    const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
+    let bufferLength = 0;
+    let dataArray = null;
+    let isRunning = false;
+
+    async function startTuner() {
+        if (isRunning) return;
+        
+        try {
+            document.getElementById('startBtn').innerText = "מפעיל...";
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            microphone = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
+            
+            microphone.connect(analyser);
+            
+            bufferLength = analyser.fftSize;
+            dataArray = new Float32Array(bufferLength);
+            
+            isRunning = true;
+            document.getElementById('startBtn').style.display = 'none'; // הסתר כפתור
+            updatePitch();
+        } catch (err) {
+            alert("לא ניתן לגשת למיקרופון. אנא אשר גישה.");
+            console.error(err);
+        }
+    }
+
+    function autoCorrelate(buf, sampleRate) {
+        let SIZE = buf.length;
+        let rms = 0;
+        for (let i = 0; i < SIZE; i++) {
+            let val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.01) return -1; // שקט מדי
+
+        let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+        for (let i = 0; i < SIZE / 2; i++) {
+            if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+        }
+        for (let i = 1; i < SIZE / 2; i++) {
+            if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+        }
+
+        buf = buf.slice(r1, r2);
+        SIZE = buf.length;
+
+        let c = new Array(SIZE).fill(0);
+        for (let i = 0; i < SIZE; i++) {
+            for (let j = 0; j < SIZE - i; j++) {
+                c[i] = c[i] + buf[j] * buf[j + i];
+            }
+        }
+
+        let d = 0; while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < SIZE; i++) {
+            if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+        }
+        let T0 = maxpos;
+
+        let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+        let a = (x1 + x3 - 2 * x2) / 2;
+        let b = (x3 - x1) / 2;
+        if (a) T0 = T0 - b / (2 * a);
+
+        return sampleRate / T0;
+    }
+
+    function updatePitch() {
+        analyser.getFloatTimeDomainData(dataArray);
+        let ac = autoCorrelate(dataArray, audioContext.sampleRate);
+
+        if (ac === -1) {
+            // שקט
+            document.getElementById('status').innerText = "ממתין לצליל...";
+            document.getElementById('needle').style.left = "50%";
+        } else {
+            let pitch = ac;
+            let note = noteFromPitch(pitch);
+            let noteName = noteStrings[note % 12];
+            let targetFreq = frequencyFromNoteNumber(note);
+            let cents = centsOffFromPitch(pitch, note);
+
+            document.getElementById('note').innerText = noteName;
+            document.getElementById('freq').innerText = Math.round(pitch) + " Hz";
+
+            // הזזת מחט
+            // 50% = מכוון. כל 50 סנט = חצי טון = קצה המד.
+            let percent = 50 + (cents); 
+            if(percent > 95) percent = 95;
+            if(percent < 5) percent = 5;
+            document.getElementById('needle').style.left = percent + "%";
+
+            let status = document.getElementById('status');
+            let noteEl = document.getElementById('note');
+            let needle = document.getElementById('needle');
+
+            if (Math.abs(cents) < 5) {
+                status.innerText = "בול! (In Tune)";
+                status.className = "status in-tune";
+                noteEl.style.color = "#4caf50";
+                needle.style.background = "#4caf50";
+            } else if (cents < 0) {
+                status.innerText = "נמוך מדי (Flat) ▼";
+                status.className = "status flat";
+                noteEl.style.color = "#2196f3";
+                needle.style.background = "#2196f3";
+            } else {
+                status.innerText = "גבוה מדי (Sharp) ▲";
+                status.className = "status sharp";
+                noteEl.style.color = "#f44336";
+                needle.style.background = "#f44336";
+            }
+        }
+
+        if (isRunning) requestAnimationFrame(updatePitch);
+    }
+
+    function noteFromPitch(frequency) {
+        let noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+        return Math.round(noteNum) + 69;
+    }
+
+    function frequencyFromNoteNumber(note) {
+        return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    function centsOffFromPitch(frequency, note) {
+        return Math.floor(1200 * Math.log(frequency / frequencyFromNoteNumber(note)) / Math.log(2));
+    }
+</script>
+
+</body>
+</html>
