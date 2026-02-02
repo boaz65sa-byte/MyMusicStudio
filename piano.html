@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1000, initial-scale=1">
+<title>Piano Master V13 - Smart Chords</title>
+<style>
+  body { background:#121212; color:#eee; font-family:'Segoe UI', sans-serif; margin:0; padding:5px; height:100vh; overflow:hidden; display:flex; flex-direction:column; align-items:center; }
+  * { box-sizing:border-box; user-select:none; }
+
+  /* ממשק */
+  .top-bar { background:#1e1e1e; padding:10px; border-radius:8px; border:1px solid #333; display:flex; gap:10px; margin-bottom:10px; z-index: 1000; }
+  select,button,input { background:#333; color:#fff; border:1px solid #555; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:14px; outline:none; }
+  .btn-gold { background: linear-gradient(to bottom, #ffb300, #ffa000); color:#000; font-weight:bold; border:none; }
+  .btn-act { background:#455a64; border-color:#607d8b; }
+  .btn-edit { width:100%; background:#222; border:1px solid #d32f2f; color:#e57373; margin-top:5px; }
+  .btn-edit.active { background:#d32f2f; color:white; font-weight:bold; }
+
+  /* גוף הפסנתר */
+  .inst-wrap { 
+      direction:ltr; position:relative; width:964px; height:290px; 
+      background: #0a0a0a; border: 4px solid #333; border-top: 8px solid #222; border-radius: 6px; 
+      display:flex; flex-direction: column; margin-bottom:10px; flex-shrink:0; 
+      padding: 5px 0 10px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  }
+  
+  .octave-bar { height: 20px; width: 100%; position: relative; border-bottom: 1px solid #333; margin-bottom: 2px; }
+  .oct-lbl { position: absolute; top: 0; font-size: 11px; color: #666; font-weight: bold; transform: translateX(-50%); }
+
+  .keys-container { position:relative; flex:1; background: #000; margin: 0 2px; overflow: hidden; }
+
+  .key { position: absolute; top: 0; border-radius:0 0 4px 4px; cursor:pointer; }
+
+  /* לבנים */
+  .key-white {
+      height: 100%; width: 62px; 
+      background: linear-gradient(to bottom, #fff 0%, #f2f2f2 100%);
+      border: 1px solid #999; border-bottom: 4px solid #bbb;
+      z-index: 1; display:flex; justify-content:center; align-items:flex-end; padding-bottom:10px;
+  }
+  .key-white.active { background: #ddd; box-shadow: inset 0 -2px 5px rgba(0,0,0,0.2); }
+
+  /* שחורים - יציבים */
+  .key-black {
+      height: 60%; width: 38px; 
+      background: linear-gradient(to bottom right, #333, #000);
+      border: 1px solid #222; border-bottom: 6px solid #000;
+      z-index: 100; border-radius: 0 0 3px 3px;
+      display:flex; justify-content:center; align-items:flex-end; padding-bottom:8px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.6);
+  }
+  .key-black.active { 
+      background: #111; border-bottom: 6px solid #000; 
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.9);
+  }
+
+  /* מרקרים */
+  .marker {
+      width:20px; height:20px; background:radial-gradient(#66bb6a,#2e7d32); 
+      border:2px solid white; border-radius:50%; 
+      display:flex; justify-content:center; align-items:center; 
+      font-size:10px; font-weight:bold; color:white; pointer-events:none;
+      box-shadow:0 2px 4px rgba(0,0,0,0.4);
+  }
+  .marker.root { background:radial-gradient(#ef5350,#c62828); z-index:20; transform:scale(1.1); }
+  .key-black .marker { width: 16px; height: 16px; font-size: 9px; margin-bottom: -2px; }
+  
+  .chord-dot {
+      position:absolute; bottom:40px; width:22px; height:22px; 
+      background:rgba(33,150,243,0.9); border:2px solid white; border-radius:50%; 
+      display:flex; justify-content:center; align-items:center; 
+      font-size:10px; font-weight:bold; color:white; pointer-events:none; z-index:15;
+      box-shadow: 0 0 5px #2196f3;
+  }
+  .key-black .chord-dot { bottom:25px; width:18px; height:18px; font-size: 9px; }
+
+  /* פאנלים */
+  .workspace { display:flex; gap:10px; width:960px; height:340px; }
+  .panel { background:#212121; border:1px solid #333; border-radius:8px; padding:10px; display:flex; flex-direction:column; overflow:hidden; }
+  .L { flex:2; } .R { flex:1; min-width:300px; background:#263238; }
+  
+  .ins-box { background:#000; padding:10px; border-radius:6px; text-align:center; margin-bottom:10px; border:1px solid #546e7a; min-height:130px; display:flex; flex-direction:column; justify-content:center; }
+  .chord-grid { display:flex; flex-wrap:wrap; gap:3px; overflow-y:auto; align-content:flex-start; flex:1; padding:5px; background:rgba(0,0,0,.2); max-height:120px; }
+  .chord-btn { background:#37474f; border:1px solid #546e7a; color:#ccc; margin:0; font-size:11px; flex-grow:1; min-width:45px; padding:6px; }
+  .chord-btn:hover { background:#ffb300; color:black; }
+
+  .timeline { background:#121212; height:45px; border:1px solid #333; display:flex; align-items:center; padding:0 5px; gap:3px; overflow-x:auto; margin-bottom:5px; }
+  .seq-item { background:#424242; padding:3px; font-size:10px; min-width:40px; text-align:center; border-radius:3px; border:1px solid #555; cursor:pointer; position:relative; margin-right:4px; }
+  .seq-item.active { background:#ffb300; color:black; }
+  .del-note { position:absolute; top:-6px; right:-6px; background:red; color:white; width:14px; height:14px; font-size:10px; line-height:12px; border-radius:50%; display:none; font-weight:bold; border:1px solid white; }
+  .seq-item:hover .del-note { display:block; }
+
+  #err { display:none; position:fixed; top:0; left:0; width:100%; background:red; color:white; text-align:center; padding:10px; z-index:9999; font-weight:bold; }
+</style>
+</head>
+<body>
+<div id="err"></div>
+
+<div class="top-bar">
+  <label>שורש:</label><select id="rt" onchange="run()"></select>
+  <label>סולם:</label><select id="sc" onchange="run()"></select>
+  <button class="btn-gold" onclick="run()">טען קלידים</button>
+  <button class="btn-act" onclick="clrB()">נקה</button>
+</div>
+
+<div class="inst-wrap">
+    <div id="octaves" class="octave-bar"></div>
+    <div id="piano" class="keys-container"></div>
+</div>
+
+<div class="workspace">
+  <div class="panel L">
+    <div style="display:flex;justify-content:space-between;color:#ffb300;margin-bottom:5px;font-weight:bold;font-size:12px">
+      ערוצי נגינה
+      <div><button class="btn-gold" onclick="playAll()">▶</button><button onclick="stop()">■</button><button onclick="clrS()">נקה הכל</button></div>
+    </div>
+    <div style="font-size:10px;color:#888">מנגינה</div><div id="tml" class="timeline"></div>
+    <div style="font-size:10px;color:#888">אקורדים</div><div id="tch" class="timeline"></div>
+    <div style="margin-top:auto;display:flex;gap:5px;border-top:1px solid #444;padding-top:5px">
+      <input id="sn" placeholder="שם..." style="flex:1;background:#333;color:#fff;border:1px solid #555">
+      <button class="btn-gold" onclick="save()">שמור</button>
+      <select id="sl" style="width:100px"></select>
+      <button onclick="load()">טען</button>
+      <button style="background:#d32f2f;border:none" onclick="del()">X</button>
+    </div>
+  </div>
+
+  <div class="panel R">
+    <div style="text-align:center;color:#ffb300;margin-bottom:5px;font-size:12px;font-weight:bold">Inspector</div>
+    <div class="ins-box">
+      <div id="inm" style="font-size:24px;font-weight:bold;color:#fff;margin-bottom:2px">---</div>
+      <div id="int" style="font-size:13px;color:#aaa;margin-bottom:8px">בחר אקורד</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:5px">
+        <button class="btn-act" onclick="mvPos(-1)">◀</button><span id="ips" style="font-size:12px;color:#ffca28;align-self:center">Pos</span><button class="btn-act" onclick="mvPos(1)">▶</button>
+      </div>
+      <button id="bedit" class="btn-edit" onclick="tEdit()">מצב עריכה: כבוי</button>
+      <div style="display:flex;gap:5px;justify-content:center;margin-top:5px">
+        <button class="btn-act" onclick="mod('inv')">Inv</button><button class="btn-act" onclick="mod('7')">7th</button>
+      </div>
+    </div>
+    <button class="btn-gold" style="width:100%;margin-bottom:5px" onclick="addIns()">הוסף לנגן ⇩</button>
+    <div id="grd" class="chord-grid"></div>
+  </div>
+</div>
+
+<script>
+window.onerror = function(m) { document.getElementById('err').style.display='block'; document.getElementById('err').innerText="שגיאה: "+m; };
+
+const N=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const START_MIDI = 48; // C3
+const KEYS_NUM = 25; 
+
+const SCL={
+ "מודוסים":{'major':[0,2,4,5,7,9,11],'minor':[0,2,3,5,7,8,10],'harmonic':[0,2,3,5,7,8,11],'dorian':[0,2,3,5,7,9,10],'phrygian':[0,1,3,5,7,8,10],'lydian':[0,2,4,6,7,9,11],'mixolydian':[0,2,4,5,7,9,10]},
+ "ערבי":{'bayati':[0,1,3,5,7,8,10],'saba':[0,1,3,4,6,8,10],'nahawand':[0,2,3,5,7,8,11],'ajam':[0,2,4,5,7,9,11],'siga':[0,3,4,7,8,10],'kard':[0,1,3,5,7,8,10],'mahur':[0,2,4,5,7,9,11]},
+ "יווני":{'hitzaz':[0,1,4,5,7,8,10],'hitzazkiar':[0,1,4,5,7,8,11],'piraiotikos':[0,1,4,6,7,8,11],'niavent':[0,2,3,5,7,8,10],'oussak':[0,1,3,5,7,8,10],'kourdi':[0,1,3,5,7,8,10],'sabah':[0,1,3,4,7,8,10],'rast':[0,2,4,5,7,9,11],'houzam':[0,3,4,7,8,11],'segah':[0,3,4,7,8,10],'tabani':[0,2,4,5,7,9,11]}
+};
+
+let ctx, oscs=[], mel=[], ch=[], isP=false, actC=null, pos=[], pi=0, isEd=false;
+let keysMap = {}; 
+
+window.onload = () => {
+    try {
+        const r=document.getElementById('rt'); N.forEach((n,i)=>{let o=document.createElement('option');o.value=i;o.text=n;if(n==='C')o.selected=true;r.appendChild(o)});
+        const s=document.getElementById('sc');
+        for(let g in SCL){let gr=document.createElement('optgroup');gr.label=g;for(let k in SCL[g]){let o=document.createElement('option');o.value=g+'|'+k;o.text=k;gr.appendChild(o)}s.appendChild(gr)}
+        buildPiano(); setTimeout(run, 100); ls();
+    } catch(e) { console.error(e); }
+};
+
+function buildPiano() {
+    const con = document.getElementById('piano');
+    const octCon = document.getElementById('octaves');
+    con.innerHTML = ''; octCon.innerHTML = ''; keysMap = {};
+    let whiteCounter = 0; const W_WIDTH = 64; 
+    
+    for(let i=0; i<KEYS_NUM; i++) {
+        let midi = START_MIDI + i;
+        let noteIdx = midi % 12;
+        let isBlack = [1,3,6,8,10].includes(noteIdx);
+        
+        if(noteIdx === 0) {
+            let octLbl = document.createElement('div');
+            octLbl.className = 'oct-lbl';
+            octLbl.innerText = 'C' + (Math.floor(midi / 12) - 1);
+            octLbl.style.left = (whiteCounter * W_WIDTH + 30) + 'px'; 
+            octCon.appendChild(octLbl);
+        }
+
+        let k = document.createElement('div');
+        k.id = 'k-'+midi;
+        k.dataset.midi = midi;
+        k.dataset.n = noteIdx;
+        
+        if (isBlack) {
+            k.className = 'key key-black';
+            k.style.left = ((whiteCounter * W_WIDTH) - 19) + 'px'; 
+        } else {
+            k.className = 'key key-white';
+            k.style.left = (whiteCounter * W_WIDTH) + 'px';
+            whiteCounter++;
+        }
+        con.appendChild(k);
+        keysMap[midi] = k;
+        k.onmousedown = (e) => {
+            e.stopPropagation();
+            if(isEd && actC) togNote(noteIdx);
+            else { playNote(midi); mel.push({n:N[noteIdx], m:midi}); rnd(); }
+        };
+    }
+}
+
+function playNote(midi) {
+    let fr = 440 * Math.pow(2, (midi - 69) / 12);
+    play(fr);
+    let k = keysMap[midi];
+    if(k) { k.classList.add('active'); setTimeout(() => k.classList.remove('active'), 150); }
+}
+
+function run(){
+    clrB(); actC=null; pos=[]; pi=0; uiIns(); isEd=false; uiEd();
+    let rt=parseInt(document.getElementById('rt').value);
+    let v=document.getElementById('sc').value.split('|'), ints=SCL[v[0]][v[1]];
+    let nts=ints.map(x=>(rt+x)%12);
+    
+    for(let m in keysMap) {
+        let k = keysMap[m];
+        let n = parseInt(k.dataset.n);
+        if(nts.includes(n)) {
+            let mk = document.createElement('div');
+            mk.className = 'marker ' + (n===rt ? 'root' : '');
+            mk.innerText = N[n];
+            k.appendChild(mk);
+        }
+    }
+    mkCh(rt, ints);
+}
+
+function mkCh(rt,ints){
+    let g=document.getElementById('grd'); g.innerHTML='';
+    for(let i=0;i<ints.length;i++){
+        let n1=(rt+ints[i])%12, n3=(rt+ints[(i+2)%ints.length])%12, n5=(rt+ints[(i+4)%ints.length])%12;
+        let t=(n3-n1+12)%12===4?'':'m';
+        let b=document.createElement('button'); b.className='chord-btn'; b.innerText=N[n1]+t;
+        let o={name:N[n1]+t, ns:[n1,n3,n5]};
+        b.onclick=()=>{ldCh(o)}; g.appendChild(b);
+    }
+}
+
+function ldCh(o){ actC=JSON.parse(JSON.stringify(o)); calP(); pi=0; uiIns(); plyP(); shP(); }
+function tEdit(){ if(!actC)return alert('בחר אקורד'); isEd=!isEd; uiEd(); }
+function uiEd(){ let b=document.getElementById('bedit'); if(isEd){b.classList.add('active');b.innerText='עריכה פעילה'}else{b.classList.remove('active');b.innerText='מצב עריכה: כבוי'} }
+function togNote(n){
+    let i=actC.ns.indexOf(n); if(i>-1)actC.ns.splice(i,1); else actC.ns.push(n);
+    actC.name='Cust'; calP(); pi=0; uiIns(); shP(); play(440);
+}
+
+// === המוח החדש לחישוב אקורדים ===
+// האלגוריתם הזה מחפש היפוכים פיזיים שמתאימים למקלדת
+function calP(){
+    pos=[];
+    let chordTones = actC.ns; // e.g. [0, 4, 7]
+    
+    // ניסיון 1: מצב שורש (Root Position)
+    // מחפש רצף של שורש -> טרצה -> קווינטה
+    findInversionSequence(chordTones[0], chordTones); 
+
+    // ניסיון 2: היפוך ראשון (3rd -> 5th -> Root)
+    // משנים את הסדר: [4, 7, 0]
+    let inv1 = [chordTones[1], chordTones[2], chordTones[0]];
+    if(chordTones.length > 2) findInversionSequence(chordTones[1], inv1);
+
+    // ניסיון 3: היפוך שני (5th -> Root -> 3rd)
+    // משנים את הסדר: [7, 0, 4]
+    let inv2 = [chordTones[2], chordTones[0], chordTones[1]];
+    if(chordTones.length > 2) findInversionSequence(chordTones[2], inv2);
+    
+    // רשת ביטחון: אם לא נמצאו היפוכים נקיים, תראה את כל התווים (כמו פעם)
+    if(pos.length === 0) {
+        let fallback = [];
+        for(let i=0; i<KEYS_NUM; i++) {
+            let midi = START_MIDI + i;
+            if(chordTones.includes(midi%12)) fallback.push({m:midi, n:midi%12, fr:440*Math.pow(2,(midi-69)/12)});
+        }
+        if(fallback.length) pos.push(fallback);
+    }
+}
+
+// פונקציית עזר למציאת רצף תווים עוקב
+function findInversionSequence(startNoteIndex, sequencePattern) {
+    // עוברים על כל הקלידים
+    for(let i=0; i<KEYS_NUM; i++) {
+        let midi = START_MIDI + i;
+        // אם מצאנו את התו הראשון ברצף (למשל Root)
+        if(midi % 12 === startNoteIndex) {
+            let potentialChord = [];
+            let currentMidi = midi;
+            let valid = true;
+            
+            // מנסים לבנות את שאר האקורד כלפי מעלה
+            for(let j=0; j<sequencePattern.length; j++) {
+                let targetNote = sequencePattern[j];
+                
+                // מחפשים את התו הבא במעלה המקלדת (בטווח של אוקטבה)
+                let foundNext = false;
+                // סריקה קדימה מהמיקום הנוכחי (כולל הנוכחי אם זה הראשון)
+                let scanStart = (j===0) ? currentMidi : currentMidi + 1;
+                
+                for(let k=scanStart; k < START_MIDI + KEYS_NUM; k++) {
+                    if(k % 12 === targetNote) {
+                        potentialChord.push({m:k, n:targetNote, fr:440*Math.pow(2,(k-69)/12)});
+                        currentMidi = k; // מעדכנים נקודת התחלה לתו הבא
+                        foundNext = true;
+                        break; // מצאנו, עוברים לתו הבא באקורד
+                    }
+                }
+                
+                if(!foundNext) { valid = false; break; } // נגמרה המקלדת
+            }
+            
+            // אם הצלחנו להרכיב את כל האקורד, מוסיפים לפוזיציות
+            if(valid && potentialChord.length === sequencePattern.length) {
+                pos.push(potentialChord);
+            }
+        }
+    }
+}
+
+function mvPos(d){if(!pos.length)return;pi=(pi+d+pos.length)%pos.length;uiIns();plyP();shP()}
+function uiIns(){
+    if(!actC){document.getElementById('inm').innerText='---';return}
+    document.getElementById('inm').innerText=actC.name;
+    document.getElementById('int').innerText=actC.ns.map(x=>N[x]).join('-');
+    document.getElementById('ips').innerText=(pi+1)+"/"+pos.length;
+}
+function mod(t){
+    if(!actC)return;
+    if(t==='inv'){actC.ns.push(actC.ns.shift());actC.name+='/I'}
+    if(t==='7'){let l=actC.ns[actC.ns.length-1];actC.ns.push((l+3)%12);actC.name+='7';}
+    calP(); pi=0; uiIns(); plyP(); shP();
+}
+
+function shP(){
+    document.querySelectorAll('.chord-dot').forEach(e=>e.remove());
+    if(!pos[pi])return;
+    pos[pi].forEach(p=>{
+        let k = keysMap[p.m];
+        if(k) {
+            let d=document.createElement('div'); d.className='chord-dot'; d.innerText=N[p.n];
+            k.appendChild(d);
+        }
+    });
+}
+function plyP(){if(pos[pi])pos[pi].forEach((p,i)=>setTimeout(()=>play(p.fr),i*50))}
+
+function addIns(){if(actC){ch.push({name:actC.name,pts:pos[pi]});rnd()}}
+function clrS(){mel=[];ch=[];rnd()}
+function delM(i){mel.splice(i,1);rnd()}
+function delC(i){ch.splice(i,1);rnd()}
+
+function rnd(){
+    let tm=document.getElementById('tml'), tc=document.getElementById('tch'); tm.innerHTML=''; tc.innerHTML='';
+    mel.forEach((x,i)=>{
+        let d=document.createElement('div');d.className='seq-item';d.id='m'+i;
+        d.innerHTML=`${x.n}<div class="del-note" onclick="delM(${i})">×</div>`;
+        d.onclick=(e)=>{if(e.target.className!=='del-note')playNote(x.m)};tm.appendChild(d);
+    });
+    ch.forEach((x,i)=>{
+        let d=document.createElement('div');d.className='seq-item';d.id='c'+i;d.style.minWidth='50px';d.style.background='#37474f';
+        d.innerHTML=`${x.name}<div class="del-note" onclick="delC(${i})">×</div>`;
+        d.onclick=(e)=>{if(e.target.className!=='del-note')x.pts.forEach((p,j)=>setTimeout(()=>play(p.fr),j*50))};tc.appendChild(d);
+    });
+}
+
+function playAll(){
+    if(isP)return;isP=true;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();ctx.resume();
+    let i=0;
+    function l(){
+        if(!isP)return;
+        document.querySelectorAll('.active').forEach(e=>e.classList.remove('active'));
+        if(i<mel.length){
+            playNote(mel[i].m);
+            let e=document.getElementById('m'+i); if(e){e.classList.add('active');e.scrollIntoView({inline:'center'})}
+            let ci=Math.floor(i/4);
+            if(i%4===0 && ci<ch.length){
+                let c=ch[ci]; c.pts.forEach((p,j)=>setTimeout(()=>play(p.fr),j*50));
+                let ce=document.getElementById('c'+ci); if(ce)ce.classList.add('active');
+                document.querySelectorAll('.chord-dot').forEach(e=>e.remove());
+                c.pts.forEach(p=>{
+                    let k=keysMap[p.m];
+                    if(k){let d=document.createElement('div');d.className='chord-dot';d.innerText=N[p.n];k.appendChild(d)}
+                });
+            }
+            i++; setTimeout(l,400);
+        } else stop();
+    }
+    l();
+}
+function stop(){isP=false}
+
+function play(f){
+    if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();ctx.resume();
+    let o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='triangle';o.frequency.value=f;
+    g.gain.setValueAtTime(0,ctx.currentTime);g.gain.linearRampToValueAtTime(0.2,ctx.currentTime+0.05);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.5);
+}
+function clrB(){document.querySelectorAll('.marker,.chord-dot').forEach(e=>e.remove())}
+
+function save(){let n=document.getElementById('sn').value;if(n){localStorage.setItem('pno13_'+n,JSON.stringify({m:mel,c:ch}));ls();alert('נשמר')}}
+function load(){let n=document.getElementById('sl').value;if(n){let d=JSON.parse(localStorage.getItem(n));if(d){mel=d.m;ch=d.c;rnd()}}}
+function del(){let n=document.getElementById('sl').value;if(n&&confirm('?')){localStorage.removeItem(n);ls()}}
+function ls(){let s=document.getElementById('sl');s.innerHTML='';for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k.startsWith('pno13_')){let o=document.createElement('option');o.value=k;o.text=k.replace('pno13_','');s.appendChild(o)}}}
+</script>
+</body>
+</html>

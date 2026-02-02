@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boaz Studio - Music Hub</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --gold: #ffb300;
+            --text: #eee;
+            --hover: #2c2c2c;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #ffb300, #ffca28);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        p.subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1000px;
+            width: 90%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 20px rgba(255, 179, 0, 0.15);
+        }
+
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .card h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* עיצוב מיוחד למכונת הקצב */
+        .card.rhythm {
+            grid-column: span 3; /* תופס את כל הרוחב למטה */
+            background: linear-gradient(to right, #1e1e1e, #252525);
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .card.rhythm .icon { margin-bottom: 0; }
+        .card.rhythm .info { text-align: right; }
+
+        @media (max-width: 768px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .card.rhythm { grid-column: span 1; flex-direction: column; }
+            .card.rhythm .info { text-align: center; }
+        }
+
+        footer {
+            margin-top: 50px;
+            color: #444;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Boaz Music Studio</h1>
+    <p class="subtitle">בחר כלי כדי להתחיל ליצור</p>
+
+    <div class="grid-container">
+        <a href="bouzouki.html" class="card">
+            <span class="icon">🪕</span>
+            <h2>Bouzouki</h2>
+            <p>בוזוקי יווני 4 קורסים<br>מקאמים וסולמות</p>
+        </a>
+
+        <a href="guitar.html" class="card">
+            <span class="icon">🎸</span>
+            <h2>Guitar</h2>
+            <p>גיטרה אקוסטית 6 מיתרים<br>אקורדים ומודוסים</p>
+        </a>
+
+        <a href="piano.html" class="card">
+            <span class="icon">🎹</span>
+            <h2>Piano</h2>
+            <p>מקלדת מלאה<br>הרמוניה ותיאוריה</p>
+        </a>
+
+        <a href="rhythm.html" class="card rhythm">
+            <span class="icon">🥁</span>
+            <div class="info">
+                <h2>Rhythm Station</h2>
+                <p>מכונת תופים, מטרונום ונגן ליווי<br>זייבקיקו • צפטטלי • מקסום • ואלס</p>
+            </div>
+        </a>
+    </div>
+
+    <footer>
+        v1.0 • All Rights Reserved
+    </footer>
+
+</body>
+</html>

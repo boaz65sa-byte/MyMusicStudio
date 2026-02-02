@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Cube V1</title>
+    <style>
+        body { background: #121212; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        /* --- עיצוב הקובייה --- */
+        .rhythm-cube {
+            background: #1e1e1e;
+            width: 320px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .title { color: #ffb300; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+
+        /* כפתורים ושליטה */
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        
+        select, button, input[type=range] {
+            width: 100%; height: 32px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; cursor: pointer; outline: none; font-size: 14px;
+        }
+        
+        button.play-btn { background: #4caf50; font-weight: bold; border: none; }
+        button.play-btn.playing { background: #f44336; } /* אדום כשמנגן */
+        
+        .row { display: flex; gap: 5px; align-items: center; justify-content: space-between; }
+        label { font-size: 12px; color: #aaa; }
+
+        /* נגן MP3 */
+        .mp3-zone {
+            margin-top: 15px; padding-top: 10px; border-top: 1px dashed #444;
+        }
+        .file-input { display: none; }
+        .file-label {
+            display: block; background: #455a64; color: white; padding: 5px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-bottom: 5px;
+        }
+        .file-label:hover { background: #607d8b; }
+
+        /* ויזואליזציה של הביט */
+        .beat-display {
+            display: flex; gap: 2px; margin-top: 10px; height: 10px; justify-content: center;
+        }
+        .beat-dot { width: 8px; height: 8px; background: #333; border-radius: 50%; }
+        .beat-dot.active { background: #ffb300; box-shadow: 0 0 5px #ffb300; }
+        .beat-dot.strong { width: 10px; height: 10px; }
+
+    </style>
+</head>
+<body>
+
+<div class="rhythm-cube">
+    <div class="title">🥁 מכונת קצב ונגן</div>
+    
+    <div class="controls">
+        <select id="styleSelect" onchange="changeStyle()">
+            <optgroup label="--- יווני ---">
+                <option value="zeibekiko">זייבקיקו (9/8)</option>
+                <option value="hasapiko">חספיקו (4/4)</option>
+                <option value="tsifteteli">צפטטלי (4/4)</option>
+                <option value="kalamatianos">קלמטיאנוס (7/8)</option>
+            </optgroup>
+            <optgroup label="--- מזרחי ---">
+                <option value="maksum">מקסום (4/4)</option>
+                <option value="baladi">בלדי (4/4)</option>
+                <option value="saidi">סעידי (4/4)</option>
+                <option value="laf">לאף (2/4)</option>
+            </optgroup>
+            <optgroup label="--- מערבי ---">
+                <option value="rock">רוק בסיסי (4/4)</option>
+                <option value="waltz">ואלס (3/4)</option>
+                <option value="disco">דיסקו (4/4)</option>
+            </optgroup>
+        </select>
+
+        <div class="row">
+            <label>BPM: <span id="bpmVal">120</span></label>
+            <input type="range" id="bpmRange" min="40" max="200" value="120" oninput="updateBPM()">
+        </div>
+
+        <button id="playBtn" class="play-btn" onclick="togglePlay()">▶ נגן מקצב</button>
+        
+        <div id="beatVis" class="beat-display"></div>
+    </div>
+
+    <div class="mp3-zone">
+        <div class="title" style="font-size: 12px; border:none; margin-bottom: 5px;">נגן ליווי (Backing Track)</div>
+        <label for="fileUpload" class="file-label">📂 טען קובץ (MP3/WAV)</label>
+        <input type="file" id="fileUpload" class="file-input" accept="audio/*" onchange="loadAudioFile(this)">
+        
+        <audio id="audioPlayer" controls style="width: 100%; height: 30px; margin-top: 5px;"></audio>
+        <div id="fileName" style="font-size: 10px; color: #888; margin-top: 2px;">אין קובץ</div>
+    </div>
+</div>
+
+<script>
+    // --- מנוע אודיו (Synthesizer) ---
+    let audioCtx;
+    let isPlaying = false;
+    let currentBeat = 0;
+    let nextNoteTime = 0;
+    let timerID;
+    let bpm = 120;
+    let rhythmPattern = []; // 1=Dum, 2=Tak, 0=Rest
+    
+    // הגדרות המקצבים (1=דום בס, 2=טאק גבוה, 0=שקט)
+    const RHYTHMS = {
+        // יווני
+        'zeibekiko': [1, 0, 0, 2, 0, 1, 0, 2, 0, 2, 0, 0], // 9/8 פשוט (דוגמה)
+        'hasapiko': [1, 0, 2, 0, 1, 0, 2, 0], // 4/4 מהיר
+        'tsifteteli': [1, 0, 2, 0, 2, 0, 1, 0, 2, 0, 0, 0], 
+        'kalamatianos': [1, 0, 2, 1, 0, 2, 0], // 7/8 (3+2+2)
+        
+        // מזרחי
+        'maksum': [1, 0, 2, 0, 0, 2, 1, 0, 2, 0, 0, 0],
+        'baladi': [1, 0, 1, 0, 0, 2, 1, 0, 0, 0, 2, 0],
+        'saidi': [1, 0, 2, 0, 1, 1, 0, 0, 2, 0, 0, 0],
+        'laf': [1, 0, 2, 0],
+
+        // מערבי
+        'rock': [1, 0, 2, 0, 1, 0, 2, 0],
+        'waltz': [1, 0, 2, 0, 2, 0],
+        'disco': [1, 0, 0, 0, 2, 0, 0, 0]
+    };
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume();
+    }
+
+    // יצירת צליל תוף (סינתזה)
+    function playDrum(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 1) { // DUM (Bass)
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
+            gain.gain.setValueAtTime(1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        } else if (type === 2) { // TAK (Snare/High)
+            osc.type = 'square'; // סאונד חד יותר
+            osc.frequency.setValueAtTime(800, now); // תדר גבוה
+            osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now); // חלש יותר
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        }
+
+        osc.start(now);
+        osc.stop(now + 0.5);
+    }
+
+    // --- מנוע התיזמון (Scheduler) ---
+    function nextNote() {
+        const secondsPerBeat = 60.0 / bpm;
+        // חילוק המקצב ל-16 או 8 בהתאם למורכבות (כאן פישטתי לחלקי 4/8 לכל ביט)
+        nextNoteTime += 0.25 * (120 / bpm); // חישוב גס למהירות יחסית
+    }
+
+    function scheduler() {
+        // Lookahead: אם הצליל הבא צריך לקרות בקרוב, נתזמן אותו
+        while (nextNoteTime < audioCtx.currentTime + 0.1) {
+            scheduleNote(currentBeat, nextNoteTime);
+            
+            // חישוב הזמן הבא בצורה פשוטה יותר (Interval)
+            // לצורך הדוגמה הפשוטה נשתמש ב-SetInterval בחוץ לשליטה ויזואלית וסאונד
+            // בגרסה מקצועית משתמשים בחישוב מדויק יותר
+            nextNoteTime += (60.0 / bpm) / 2; // שמיניות
+            
+            // קידום הביט
+            currentBeat++;
+            if (currentBeat >= rhythmPattern.length) currentBeat = 0;
+        }
+        timerID = window.setTimeout(scheduler, 25.0);
+    }
+    
+    // פונקציה פשוטה יותר מבוססת Interval לגרסה זו (יציבה מספיק לדפדפן)
+    let beatInterval;
+    function startRhythm() {
+        let pattern = RHYTHMS[document.getElementById('styleSelect').value];
+        rhythmPattern = pattern;
+        updateVis();
+        
+        let i = 0;
+        // חישוב זמן בין פעמות (במילישניות) - מותאם לחלקי 16 או 8
+        let speed = (60000 / bpm) / 2; // שמיניות
+
+        beatInterval = setInterval(() => {
+            // ויזואליזציה
+            document.querySelectorAll('.beat-dot').forEach((d, idx) => {
+                d.classList.toggle('active', idx === i);
+            });
+
+            // נגינה
+            if (pattern[i] !== 0) playDrum(pattern[i]);
+
+            i++;
+            if (i >= pattern.length) i = 0;
+        }, speed);
+    }
+
+    function togglePlay() {
+        initAudio();
+        const btn = document.getElementById('playBtn');
+        
+        if (isPlaying) {
+            clearInterval(beatInterval);
+            isPlaying = false;
+            btn.innerText = "▶ נגן מקצב";
+            btn.classList.remove('playing');
+            document.querySelectorAll('.beat-dot').forEach(d => d.classList.remove('active'));
+        } else {
+            bpm = document.getElementById('bpmRange').value;
+            startRhythm();
+            isPlaying = true;
+            btn.innerText = "■ עצור";
+            btn.classList.add('playing');
+        }
+    }
+
+    function updateBPM() {
+        bpm = document.getElementById('bpmRange').value;
+        document.getElementById('bpmVal').innerText = bpm;
+        if (isPlaying) {
+            clearInterval(beatInterval);
+            startRhythm();
+        }
+    }
+
+    function changeStyle() {
+        if (isPlaying) {
+            clearInterval(beatInterval);
+            startRhythm();
+        } else {
+            updateVis(); // רק עדכון ויזואלי
+        }
+    }
+
+    // יצירת הנקודות הויזואליות
+    function updateVis() {
+        const pattern = RHYTHMS[document.getElementById('styleSelect').value];
+        const vis = document.getElementById('beatVis');
+        vis.innerHTML = '';
+        pattern.forEach(note => {
+            let d = document.createElement('div');
+            d.className = 'beat-dot ' + (note === 1 ? 'strong' : '');
+            vis.appendChild(d);
+        });
+    }
+
+    // --- נגן MP3 ---
+    function loadAudioFile(input) {
+        const file = input.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            const player = document.getElementById('audioPlayer');
+            player.src = url;
+            document.getElementById('fileName').innerText = file.name;
+        }
+    }
+
+    // אתחול ראשוני
+    updateVis();
+
+</script>
+
+</body>
+</html>
