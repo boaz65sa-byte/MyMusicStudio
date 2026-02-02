@@ -2,15 +2,17 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=1000, initial-scale=1">
-<title>Bouzouki Studio - HD Sound</title>
+<title>Bouzouki Studio - Complete Fixed</title>
 <style>
   body{background:#121212;color:#eee;font-family:'Segoe UI',sans-serif;margin:0;padding:5px;height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center}
   *{box-sizing:border-box;user-select:none}
   
+  /* Top Nav */
   .top-nav { width: 960px; display: flex; gap: 10px; margin-bottom: 5px; justify-content: flex-end; }
   .nav-btn { text-decoration:none; font-size:14px; background:#333; color:white; padding:4px 10px; border-radius:4px; border:1px solid #555; cursor: pointer; }
   .nav-btn:hover { background: #555; }
 
+  /* Toolbar */
   .top-bar{background:#1e1e1e;padding:10px;border-radius:8px;border:1px solid #333;display:flex;gap:10px;margin-bottom:10px;z-index:50;}
   select,button,input{background:#333;color:#fff;border:1px solid #555;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:14px;outline:none;}
   .btn-gold{background:#ffb300;color:#000;font-weight:bold;border:none}
@@ -30,36 +32,45 @@
   .file-label:hover { background: #607d8b; }
   #audioPlayer { width: 100%; height: 25px; margin-top: 5px; }
 
-  /* Bouzouki Styling */
+  /* Bouzouki Structure */
   .inst-wrap{direction:ltr;position:relative;width:960px;height:220px;background:#050505;border:4px solid #3e2723;border-radius:10px;display:flex;overflow:hidden;margin-bottom:10px;flex-shrink:0}
-  .inst-wrap.flip { transform: scaleX(-1); }
-  .inst-wrap.flip .flip-fix { transform: scaleX(-1); display:inline-flex; justify-content:center; align-items:center; }
   .head{width:110px;background:#2d1a10;border-right:3px solid #111;position:relative;z-index:2}
-  .neck{flex:1;background:linear-gradient(#5d4037,#3e2723);position:relative}
+  .neck{flex:1;background:linear-gradient(#5d4037,#3e2723);position:relative;z-index:1}
   .nut{width:14px;background:#e0e0e0;z-index:5;border-left:1px solid #999;border-right:1px solid #999}
-  .line{position:absolute;top:0;bottom:0;width:3px;background:#8d6e63;border-left:1px solid #6d4c41}
-  .num{position:absolute;bottom:2px;width:20px;margin-left:-10px;text-align:center;font-size:10px;color:#bcaaa4;font-weight:bold;display:flex;justify-content:center;}
-  .dot{position:absolute;width:14px;height:14px;background:#fff8e1;border-radius:50%;top:50%;margin:-7px;opacity:0.9;box-shadow:0 0 2px rgba(0,0,0,0.5)}
+
+  .line{position:absolute;top:0;bottom:0;width:2px;background:#8d6e63;border-left:1px solid #4e342e; z-index: 2;}
+  .num{position:absolute;bottom:2px;width:20px;margin-left:-10px;text-align:center;font-size:10px;color:#bcaaa4;font-weight:bold; z-index: 3;}
+  .dot{position:absolute;width:12px;height:12px;background:#fff8e1;border-radius:50%;top:50%;margin:-6px;opacity:0.9;box-shadow:0 0 2px rgba(0,0,0,0.5); z-index: 3;}
   .dot.t{top:25%}.dot.b{top:75%}
-  .course{position:relative;width:100%;height:25%;display:flex;flex-direction:column;justify-content:center;padding:0}
-  .string{width:100%;box-shadow:0 1px 2px rgba(0,0,0,0.8);border-radius:1px; z-index: 10; height: 2px; background: #ccc;}
-  .char{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#ffb300;font-size:16px;font-weight:bold;z-index:15;width:20px;text-align:center;display:flex;justify-content:center;text-shadow:1px 1px 2px black;}
-  .marker{position:absolute;width:22px;height:22px;background:radial-gradient(#4caf50,#2e7d32);border:2px solid white;border-radius:50%;top:50%;margin:-11px;z-index:20;display:flex;justify-content:center;align-items:center;font-size:10px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px #000}
-  .marker.root{background:radial-gradient(#f44336,#c62828);z-index:21}
+
+  .course{position:relative;width:100%;height:25%;display:flex;flex-direction:column;justify-content:center;padding:0; z-index: 10;}
+  /* תיקון מיתרים כפולים */
+  .string-pair { width: 100%; height: 4px; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; background: transparent; box-shadow: 0 2px 2px rgba(0,0,0,0.5); position: absolute; left: 0; pointer-events: none; }
+  .bass-pair { border-color: #d7ccc8; height: 5px; border-width: 2px 0 1px 0; } 
+
+  .char{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#ffb300;font-size:16px;font-weight:bold;z-index:15;width:20px;text-align:center;text-shadow:1px 1px 2px black;}
+
+  .marker{position:absolute;width:20px;height:20px;background:radial-gradient(#4caf50,#2e7d32);border:2px solid white;border-radius:50%;top:50%;margin-top:-10px;margin-left:-10px;z-index:50;display:flex;justify-content:center;align-items:center;font-size:10px;font-weight:bold;cursor:pointer;box-shadow:0 2px 4px #000}
+  .marker.root{background:radial-gradient(#f44336,#c62828);z-index:51}
+  .chord-dot{position:absolute;width:22px;height:22px;background:rgba(33,150,243,0.9);border:2px solid white;border-radius:50%;top:50%;margin-top:-11px;margin-left:-11px;z-index:60;pointer-events:none;display:flex;justify-content:center;align-items:center;font-size:10px;color:white;font-weight:bold; box-shadow: 0 0 5px #000;}
   .flash{background:#fff!important;box-shadow:0 0 20px #fff;transition:0.1s}
 
   .workspace{display:flex;gap:10px;width:960px;height:340px}
   .panel{background:#212121;border:1px solid #333;border-radius:8px;padding:10px;display:flex;flex-direction:column;overflow:hidden;flex:1}
-  .L{flex:2} .R{flex:1;min-width:300px;background:#263238}
   .ins-box{background:#000;padding:10px;border-radius:6px;text-align:center;margin-bottom:10px;border:1px solid #546e7a;min-height:130px;display:flex;flex-direction:column;justify-content:center}
   .chord-grid{display:flex;flex-wrap:wrap;gap:3px;overflow-y:auto;align-content:flex-start;flex:1;padding:5px;background:rgba(0,0,0,.2);max-height:120px}
   .chord-btn{background:#37474f;border:1px solid #546e7a;color:#ccc;margin:0;font-size:11px;flex-grow:1;min-width:45px;padding:6px}
   .chord-btn:hover{background:#ffb300;color:black}
+
   .timeline{background:#121212;height:45px;border:1px solid #333;display:flex;align-items:center;padding:0 5px;gap:3px;overflow-x:auto;margin-bottom:5px}
   .seq-item{background:#424242;padding:3px;font-size:10px;min-width:40px;text-align:center;border-radius:3px;border:1px solid #555;cursor:pointer;position:relative;margin-right:4px}
   .seq-item.active{background:#ffb300;color:black}
   .del-note{position:absolute;top:-6px;right:-6px;background:red;color:white;width:14px;height:14px;font-size:10px;line-height:12px;border-radius:50%;display:none;font-weight:bold;border:1px solid white}
   .seq-item:hover .del-note{display:block}
+
+  .click-zone { position: absolute; top:0; bottom:0; width: 4.8%; z-index: 100; cursor: pointer; }
+  .click-zone:hover { background: rgba(255,255,255,0.05); }
+
   #err{display:none;position:fixed;top:0;left:0;width:100%;background:red;color:#fff;text-align:center;padding:5px;z-index:999}
 </style>
 </head>
@@ -76,7 +87,6 @@
   <label>שורש:</label><select id="rt" onchange="run()"></select>
   <label>סולם:</label><select id="sc" onchange="run()"></select>
   <button class="btn-gold" onclick="run()">טען בוזוקי</button>
-  <button class="btn-act" onclick="flip()">היפוך</button>
   <button class="btn-act" onclick="clrB()">נקה</button>
   <button class="btn-act" style="border:1px solid #ffb300; color:#ffb300;" onclick="toggleRhythm()">🥁 מכונת תופים</button>
 </div>
@@ -109,13 +119,6 @@
                 <option value="karachi">קראצ'י (Karachi)</option>
                 <option value="laf">לאף (Laf)</option>
             </optgroup>
-            <optgroup label="--- מזרחי (4/4 & כבד) ---">
-                <option value="maksum">מקסום (Maksum)</option>
-                <option value="baladi">בלדי (Baladi)</option>
-                <option value="saidi">סעידי (Saidi)</option>
-                <option value="masmoudi">מסמודי גדול (Masmoudi 8/4)</option>
-                <option value="samai">סמאעי (Samai 10/8)</option>
-            </optgroup>
             <optgroup label="--- מערבי ---">
                 <option value="rock">רוק (Rock 4/4)</option>
                 <option value="waltz">ואלס (Waltz 3/4)</option>
@@ -129,6 +132,7 @@
         </div>
         <button id="rhythmPlayBtn" class="btn-gold" style="width:100%; margin-top:5px;" onclick="toggleRhythmPlay()">▶ נגן מקצב</button>
         <div id="beatVis" style="margin-top:8px; text-align:center; height:12px; display:flex; justify-content:center; gap:2px;"></div>
+        
         <div class="mp3-zone">
             <div style="font-size:11px; color:#888; margin-bottom:3px;">נגן ליווי (Backing Track)</div>
             <label for="fileUpload" class="file-label">📂 טען שיר (MP3/WAV)</label>
@@ -146,13 +150,12 @@
 </div>
 
 <div class="workspace">
-  <div class="panel L">
+  <div class="panel">
     <div style="display:flex;justify-content:space-between;color:#ffb300;margin-bottom:5px;font-weight:bold;font-size:12px">
-      ערוצי נגינה
+      ערוץ נגינה
       <div><button class="btn-gold" onclick="playAll()">▶</button><button onclick="stop()">■</button><button onclick="clrS()">נקה הכל</button></div>
     </div>
-    <div style="font-size:10px;color:#888">Melody</div><div id="tml" class="timeline"></div>
-    <div style="font-size:10px;color:#888">Harmony</div><div id="tch" class="timeline"></div>
+    <div id="tml" class="timeline"></div>
     <div style="margin-top:auto;display:flex;gap:5px;border-top:1px solid #444;padding-top:5px">
       <input id="sn" placeholder="שם..." style="flex:1;background:#333;color:#fff;border:1px solid #555">
       <button class="btn-gold" onclick="save()">שמור</button>
@@ -162,20 +165,17 @@
     </div>
   </div>
 
-  <div class="panel R">
-    <div style="text-align:center;color:#ffb300;margin-bottom:5px;font-size:12px;font-weight:bold">Inspector</div>
+  <div class="panel" style="min-width:300px; background:#263238;">
+    <div style="text-align:center;color:#ffb300;margin-bottom:5px;font-size:12px;font-weight:bold">אקורדים</div>
     <div class="ins-box">
       <div id="inm" style="font-size:24px;font-weight:bold;color:#fff;margin-bottom:2px">---</div>
-      <div id="int" style="font-size:13px;color:#aaa;margin-bottom:8px">בחר אקורד</div>
+      <div id="int" style="font-size:13px;color:#aaa;margin-bottom:8px">בחר אקורד מהרשימה</div>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:5px">
-        <button class="btn-act" onclick="mvPos(-1)">◀</button><span id="ips" style="font-size:12px;color:#ffca28;align-self:center">Pos</span><button class="btn-act" onclick="mvPos(1)">▶</button>
-      </div>
-      <button id="bedit" class="btn-edit" onclick="tEdit()">מצב עריכה: כבוי</button>
-      <div style="display:flex;gap:5px;justify-content:center;margin-top:5px">
-        <button class="btn-act" onclick="mod('inv')">Inv</button><button class="btn-act" onclick="mod('7')">7th</button>
+        <button class="btn-act" onclick="mvPos(-1)">◀</button>
+        <span id="ips" style="font-size:12px;color:#ffca28;align-self:center">פוזיציה</span>
+        <button class="btn-act" onclick="mvPos(1)">▶</button>
       </div>
     </div>
-    <button class="btn-gold" style="width:100%;margin-bottom:5px" onclick="addIns()">הוסף לנגן ⇩</button>
     <div id="grd" class="chord-grid"></div>
   </div>
 </div>
@@ -183,63 +183,15 @@
 <script>
 window.onerror=function(m){document.getElementById('err').style.display='block';document.getElementById('err').innerText="שגיאה: "+m};
 const N=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const T_VISUAL = [62, 57, 53, 48]; 
+const T_VISUAL = [62, 57, 53, 48]; // D4, A3, F3, C3
 const FQ=[293.66, 220.00, 174.61, 130.81]; 
 
 const SCL={
- "גיטרה/מערבי":{'major':[0,2,4,5,7,9,11],'minor':[0,2,3,5,7,8,10],'pent-maj':[0,2,4,7,9],'pent-min':[0,3,5,7,10],'blues':[0,3,5,6,7,10],'spanish':[0,1,4,5,7,8,10]},
- "ערבי":{'bayati':[0,1,3,5,7,8,10],'saba':[0,1,3,4,6,8,10],'nahawand':[0,2,3,5,7,8,11],'ajam':[0,2,4,5,7,9,11],'siga':[0,3,4,7,8,10],'kard':[0,1,3,5,7,8,10],'mahur':[0,2,4,5,7,9,11]},
- "יווני":{'hitzaz':[0,1,4,5,7,8,10],'hitzazkiar':[0,1,4,5,7,8,11],'piraiotikos':[0,1,4,6,7,8,11],'niavent':[0,2,3,5,7,8,10],'oussak':[0,1,3,5,7,8,10],'kourdi':[0,1,3,5,7,8,10],'sabah':[0,1,3,4,7,8,10],'rast':[0,2,4,5,7,9,11],'houzam':[0,3,4,7,8,11],'segah':[0,3,4,7,8,10],'tabani':[0,2,4,5,7,9,11]}
+ "יווני":{'hitzaz':[0,1,4,5,7,8,10],'hitzazkiar':[0,1,4,5,7,8,11],'piraiotikos':[0,1,4,6,7,8,11],'niavent':[0,2,3,5,7,8,10],'oussak':[0,1,3,5,7,8,10],'kourdi':[0,1,3,5,7,8,10],'sabah':[0,1,3,4,7,8,10],'rast':[0,2,4,5,7,9,11],'houzam':[0,3,4,7,8,11],'segah':[0,3,4,7,8,10],'tabani':[0,2,4,5,7,9,11]},
+ "מערבי":{'major':[0,2,4,5,7,9,11],'minor':[0,2,3,5,7,8,10],'pent-maj':[0,2,4,7,9],'pent-min':[0,3,5,7,10]}
 };
 
-let ctx, oscs=[], mel=[], ch=[], isP=false, actC=null, pos=[], pi=0, isEd=false;
-
-// --- Boaz Audio Engine: Bouzouki HD ---
-// פונקציה חדשה שמחליפה את ה"צפצוף" בסאונד מורכב
-function play(freq) {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    ctx.resume();
-    const t = ctx.currentTime;
-
-    // 1. Oscillator 1: Sawtooth (The "Bite")
-    // גל מסור נותן את הצליל המתכתי והחד של הבוזוקי
-    const osc1 = ctx.createOscillator();
-    osc1.type = 'sawtooth';
-    osc1.frequency.value = freq;
-
-    // 2. Oscillator 2: Square (The "Body")
-    // גל מרובע נותן נפח, עם Detune קל שמחקה מיתר כפול
-    const osc2 = ctx.createOscillator();
-    osc2.type = 'square';
-    osc2.frequency.value = freq;
-    osc2.detune.value = 4; // 4 cents detune for chorus effect (double string)
-
-    // 3. Filter: Highpass & Bandpass (The "Metal")
-    // בוזוקי הוא כלי עם תדרים גבוהים בולטים
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.Q.value = 1; // Resonant peak
-    filter.frequency.value = freq * 3; // Emphasize harmonics
-
-    // 4. Envelope (Gain) - Pluck shape
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.4, t + 0.01); // Quick attack (פריטה)
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6); // Fast decay (דעיכה מהירה כמו בוזוקי)
-
-    // חיבורים
-    osc1.connect(gain);
-    osc2.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    // הפעלה
-    osc1.start(t);
-    osc2.start(t);
-    osc1.stop(t + 0.7);
-    osc2.stop(t + 0.7);
-}
-// --- End Audio Engine ---
+let ctx, mel=[], actC=null, pos=[], pi=0;
 
 window.onload=()=>{
  const r=document.getElementById('rt'); 
@@ -254,12 +206,12 @@ window.onload=()=>{
 };
 
 function mkNeck(){
- const h=document.getElementById('head'), n=document.getElementById('neck'), K=1-Math.pow(0.9438,20);
- const gp=i=>((1-Math.pow(0.9438,i))/K)*100;
+ const h=document.getElementById('head'), n=document.getElementById('neck');
  for(let i=1;i<=20;i++){
-  let p=gp(i), c=(gp(i)+gp(i-1))/2;
+  let p=((1-Math.pow(0.9438,i))/(1-Math.pow(0.9438,20)))*100;
+  let c=(((1-Math.pow(0.9438,i))/(1-Math.pow(0.9438,20)))+((1-Math.pow(0.9438,i-1))/(1-Math.pow(0.9438,20))))/2*100;
   let l=document.createElement('div');l.className='line';l.style.left=p+'%';n.appendChild(l);
-  let nm=document.createElement('div');nm.className='num flip-fix';nm.innerText=i;nm.style.left=c+'%';n.appendChild(nm);
+  let nm=document.createElement('div');nm.className='num';nm.innerText=i;nm.style.left=c+'%';n.appendChild(nm);
   if([3,5,7,9,15,17,19].includes(i)){let d=document.createElement('div');d.className='dot';d.style.left=c+'%';n.appendChild(d)}
   if(i===12){let d1=document.createElement('div');d1.className='dot t';d1.style.left=c+'%';n.appendChild(d1);let d2=document.createElement('div');d2.className='dot b';d2.style.left=c+'%';n.appendChild(d2)}
  }
@@ -268,20 +220,42 @@ function mkNeck(){
 
 function mkRow(i,p,hd){
  let d=document.createElement('div');d.className='course';d.dataset.i=i;
- d.innerHTML=`<div class="string"></div>`;
- if(hd) d.innerHTML+=`<div class="char flip-fix">${N[T_VISUAL[i]%12]}</div>`;
+ let cls = (i >= 2) ? 'string-pair bass-pair' : 'string-pair';
+ d.innerHTML=`<div class="${cls}"></div>`;
+ if(hd) d.innerHTML+=`<div class="char">${N[T_VISUAL[i]%12]}</div>`;
+ for(let f=0; f<=20; f++) {
+     let z = document.createElement('div'); z.className='click-zone';
+     if(f===0) { z.style.width='100%'; z.style.left=0; }
+     else {
+         let p=((1-Math.pow(0.9438,f))/(1-Math.pow(0.9438,20)))*100;
+         let pr=((1-Math.pow(0.9438,f-1))/(1-Math.pow(0.9438,20)))*100;
+         z.style.left=pr+'%'; z.style.width=(p-pr)+'%';
+     }
+     z.onclick = (e) => { e.stopPropagation(); userPlay(i, f); };
+     d.appendChild(z);
+ }
  p.appendChild(d);
 }
 
+function userPlay(stringIdx, fret) {
+    let base = T_VISUAL[stringIdx];
+    let noteVal = (base + fret) % 12;
+    let freq = FQ[stringIdx] * Math.pow(2, fret/12);
+    play(freq);
+    mel.push({n:N[noteVal], s:stringIdx, f:fret, fr:freq});
+    rnd();
+}
+
 function run(){
- clrB(); actC=null; pos=[]; pi=0; uiIns(); isEd=false; uiEd();
+ clrB(); actC=null; pos=[]; pi=0; uiIns();
  let rt=parseInt(document.getElementById('rt').value);
  let v=document.getElementById('sc').value.split('|'), ints=SCL[v[0]][v[1]];
  let nts=ints.map(x=>(rt+x)%12);
  for(let s=0;s<4;s++){
   let b=T_VISUAL[s];
   for(let f=0;f<=20;f++){
-   let n=(b+f)%12; if(nts.includes(n)) mkM(s,f,n,n===rt);
+   let n=(b+f)%12; 
+   if(nts.includes(n)) mkM(s,f,n,n===rt);
   }
  }
  mkCh(rt, ints);
@@ -291,45 +265,121 @@ function mkM(s,f,n,r){
  let c=f===0?document.getElementById('head'):document.getElementById('neck');
  let row=Array.from(c.querySelectorAll('.course')).find(x=>x.dataset.i==s);
  if(row){
-  let m=document.createElement('div'); m.className='marker flip-fix '+(r?'root':'');
-  m.innerText=N[n]; m.dataset.s=s; m.dataset.f=f;
+  let m=document.createElement('div'); m.className='marker '+(r?'root':'');
+  m.innerText=N[n]; 
   posEl(m,f);
   m.onclick=(e)=>{
    e.stopPropagation();
-   if(isEd && actC) togNote(n);
-   else {
-    let fr=FQ[s]*Math.pow(2,f/12); play(fr); m.classList.add('flash'); setTimeout(()=>m.classList.remove('flash'),150);
-    mel.push({n:N[n],s,f,fr}); rnd();
-   }
+   let fr=FQ[s]*Math.pow(2,f/12); play(fr); 
+   m.classList.add('flash'); setTimeout(()=>m.classList.remove('flash'),150);
+   mel.push({n:N[n],s,f,fr}); rnd();
   };
   row.appendChild(m);
  }
 }
-function posEl(e,f){ if(f===0)e.style.left='50px'; else{ const K=1-Math.pow(0.9438,20); let p=((1-Math.pow(0.9438,f))/K)*100, pr=((1-Math.pow(0.9438,f-1))/K)*100; e.style.left=((p+pr)/2)+'%'; } }
-function mkCh(rt,ints){ let g=document.getElementById('grd');g.innerHTML=''; for(let i=0;i<ints.length;i++){ let n1=(rt+ints[i])%12, n3=(rt+ints[(i+2)%ints.length])%12, n5=(rt+ints[(i+4)%ints.length])%12; let t=(n3-n1+12)%12===4?'':'m'; let b=document.createElement('button');b.className='chord-btn';b.innerText=N[n1]+t; let o={name:N[n1]+t, ns:[n1,n3,n5]}; b.onclick=()=>{ldCh(o)};g.appendChild(b); } }
+
+function posEl(e,f){ 
+    if(f===0) { e.style.left='50%'; e.style.transform='translateX(-50%) translateY(-50%)'; }
+    else{ 
+        let p=((1-Math.pow(0.9438,f))/(1-Math.pow(0.9438,20)))*100; 
+        let pr=((1-Math.pow(0.9438,f-1))/(1-Math.pow(0.9438,20)))*100; 
+        e.style.left=((p+pr)/2)+'%'; 
+    } 
+}
+
+function mkCh(rt,ints){ 
+    let g=document.getElementById('grd'); g.innerHTML=''; 
+    for(let i=0;i<ints.length;i++){ 
+        let n1=(rt+ints[i])%12, n3=(rt+ints[(i+2)%ints.length])%12, n5=(rt+ints[(i+4)%ints.length])%12; 
+        let t=(n3-n1+12)%12===4?'':'m'; 
+        let b=document.createElement('button'); b.className='chord-btn'; b.innerText=N[n1]+t; 
+        let o={name:N[n1]+t, ns:[n1,n3,n5]}; 
+        b.onclick=()=>{ldCh(o)}; g.appendChild(b); 
+    } 
+}
+
 function ldCh(o){ actC=JSON.parse(JSON.stringify(o)); calP(); pi=0; uiIns(); plyP(); shP(); }
-function tEdit(){ if(!actC)return alert('בחר אקורד'); isEd=!isEd; uiEd(); }
-function uiEd(){ let b=document.getElementById('bedit'); if(isEd){b.classList.add('active');b.innerText='עריכה פעילה'}else{b.classList.remove('active');b.innerText='מצב עריכה: כבוי'} }
-function togNote(n){ let i=actC.ns.indexOf(n); if(i>-1)actC.ns.splice(i,1); else actC.ns.push(n); actC.name='Cust'; calP(); pi=0; uiIns(); shP(); play(440); }
-function calP(){ pos=[]; let rng=[[0,4],[3,8],[7,12],[10,15]]; rng.forEach(r=>{ let p=[]; for(let s=0;s<4;s++){ let b=T_VISUAL[s]; for(let f=r[0];f<=r[1];f++){ let n=(b+f)%12; if(actC.ns.includes(n)){p.push({s,f,n,fr:FQ[s]*Math.pow(2,f/12)});break} } } if(p.length>=2)pos.push(p); }); if(!pos.length)pos.push([]); }
+
+function calP(){ 
+    pos=[]; 
+    let rng=[[0,5],[4,9],[8,13]]; 
+    rng.forEach(r=>{ 
+        let p=[]; 
+        for(let s=0;s<4;s++){ 
+            let b=T_VISUAL[s]; 
+            for(let f=r[0];f<=r[1];f++){ 
+                let n=(b+f)%12; 
+                if(actC.ns.includes(n)){
+                    p.push({s,f,n,fr:FQ[s]*Math.pow(2,f/12)});
+                    break; 
+                } 
+            } 
+        } 
+        if(p.length>=3) pos.push(p); 
+    }); 
+    if(!pos.length) alert("לא נמצאו פוזיציות");
+}
+
 function mvPos(d){if(!pos.length)return;pi=(pi+d+pos.length)%pos.length;uiIns();plyP();shP()}
 function uiIns(){ if(!actC){document.getElementById('inm').innerText='---';return} document.getElementById('inm').innerText=actC.name; document.getElementById('int').innerText=actC.ns.map(x=>N[x]).join('-'); document.getElementById('ips').innerText=(pi+1)+"/"+pos.length; }
-function mod(t){ if(!actC)return; if(t==='inv'){actC.ns.push(actC.ns.shift());actC.name+='/I'} if(t==='7'){let l=actC.ns[actC.ns.length-1];actC.ns.push((l+3)%12);actC.name+='7'} calP(); pi=0; uiIns(); plyP(); shP(); }
-function shP(){ document.querySelectorAll('.chord-dot').forEach(e=>e.remove()); if(!pos[pi])return; pos[pi].forEach(p=>{ let c=p.f===0?document.getElementById('head'):document.getElementById('neck'); let r=Array.from(c.querySelectorAll('.course')).find(x=>x.dataset.i==p.s); if(r){let d=document.createElement('div');d.className='chord-dot flip-fix';d.innerText=N[p.n];posEl(d,p.f);r.appendChild(d)} }); }
+
+function shP(){ 
+    document.querySelectorAll('.chord-dot').forEach(e=>e.remove()); 
+    if(!pos[pi])return; 
+    pos[pi].forEach(p=>{ 
+        let c=p.f===0?document.getElementById('head'):document.getElementById('neck'); 
+        let r=Array.from(c.querySelectorAll('.course')).find(x=>x.dataset.i==p.s); 
+        if(r){
+            let d=document.createElement('div'); d.className='chord-dot'; d.innerText=N[p.n]; 
+            posEl(d,p.f); 
+            r.appendChild(d); 
+        } 
+    }); 
+}
+
 function plyP(){if(pos[pi])pos[pi].forEach((p,i)=>setTimeout(()=>play(p.fr),i*30))}
-function addIns(){if(actC){ch.push({name:actC.name,pts:pos[pi]});rnd()}}
-function clrS(){mel=[];ch=[];rnd()}
+
+function rnd(){ let tm=document.getElementById('tml'); tm.innerHTML=''; mel.forEach((x,i)=>{ let d=document.createElement('div');d.className='seq-item';d.id='m'+i; d.innerHTML=`${x.n}<br>S${x.s+1}<div class="del-note" onclick="delM(${i})">×</div>`; d.onclick=(e)=>{if(e.target.className!=='del-note')play(x.fr)};tm.appendChild(d); }); }
 function delM(i){mel.splice(i,1);rnd()}
-function delC(i){ch.splice(i,1);rnd()}
-function rnd(){ let tm=document.getElementById('tml'), tc=document.getElementById('tch'); tm.innerHTML=''; tc.innerHTML=''; mel.forEach((x,i)=>{ let d=document.createElement('div');d.className='seq-item';d.id='m'+i; d.innerHTML=`${x.n}<br>S${x.s+1}<div class="del-note" onclick="delM(${i})">×</div>`; d.onclick=(e)=>{if(e.target.className!=='del-note')play(x.fr)};tm.appendChild(d); }); ch.forEach((x,i)=>{ let d=document.createElement('div');d.className='seq-item';d.id='c'+i;d.style.minWidth='50px';d.style.background='#37474f'; d.innerHTML=`${x.name}<div class="del-note" onclick="delC(${i})">×</div>`; d.onclick=(e)=>{if(e.target.className!=='del-note')x.pts.forEach((p,j)=>setTimeout(()=>play(p.fr),j*30))};tc.appendChild(d); }); }
-function playAll(){ if(isP)return;isP=true;if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();ctx.resume(); let i=0; function l(){ if(!isP)return; document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); if(i<mel.length){ play(mel[i].fr); let e=document.getElementById('m'+i); if(e){e.classList.add('active');e.scrollIntoView({inline:'center'})} let m=document.querySelector(`.marker[data-s="${mel[i].s}"][data-f="${mel[i].f}"]`); if(m){m.classList.add('flash');setTimeout(()=>m.classList.remove('flash'),150)} let ci=Math.floor(i/4); if(i%4===0 && ci<ch.length){ let c=ch[ci]; c.pts.forEach((p,j)=>setTimeout(()=>play(p.fr),j*30)); let ce=document.getElementById('c'+ci); if(ce)ce.classList.add('active'); document.querySelectorAll('.chord-dot').forEach(e=>e.remove()); c.pts.forEach(p=>{ let co=p.f===0?document.getElementById('head'):document.getElementById('neck'); let ro=Array.from(co.querySelectorAll('.course')).find(x=>x.dataset.i==p.s); if(ro){let d=document.createElement('div');d.className='chord-dot flip-fix';d.innerText=N[p.n];posEl(d,p.f);ro.appendChild(d)} }); } i++; setTimeout(l,400); } else stop(); } l(); }
+function clrS(){mel=[];rnd()}
+
+function playAll(){ 
+    if(isP)return; isP=true;
+    let i=0; 
+    function l(){ 
+        if(!isP)return; 
+        document.querySelectorAll('.active').forEach(e=>e.classList.remove('active')); 
+        if(i<mel.length){ 
+            play(mel[i].fr); 
+            let e=document.getElementById('m'+i); 
+            if(e){e.classList.add('active');e.scrollIntoView({inline:'center'})} 
+            i++; setTimeout(l,400); 
+        } else isP=false; 
+    } 
+    l(); 
+}
 function stop(){isP=false}
+
+function play(f){ 
+    if(!ctx) ctx=new(window.AudioContext||window.webkitAudioContext)(); 
+    ctx.resume(); 
+    let o=ctx.createOscillator(), g=ctx.createGain(); 
+    o.type='triangle'; 
+    o.frequency.value=f; 
+    g.gain.setValueAtTime(0,ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0.2,ctx.currentTime+0.05);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5); 
+    o.connect(g); g.connect(ctx.destination); 
+    o.start(); o.stop(ctx.currentTime+0.5); 
+}
+
 function clrB(){document.querySelectorAll('.marker,.chord-dot').forEach(e=>e.remove())}
-function flip(){document.getElementById('inst').classList.toggle('flip')}
-function save(){let n=document.getElementById('sn').value;if(n){localStorage.setItem('bz2_'+n,JSON.stringify({m:mel,c:ch}));ls();alert('נשמר')}}
-function load(){let n=document.getElementById('sl').value;if(n){let d=JSON.parse(localStorage.getItem(n));if(d){mel=d.m;ch=d.c;rnd()}}}
+function save(){let n=document.getElementById('sn').value;if(n){localStorage.setItem('bzFixed_'+n,JSON.stringify({m:mel}));ls();alert('נשמר')}}
+function load(){let n=document.getElementById('sl').value;if(n){let d=JSON.parse(localStorage.getItem(n));if(d){mel=d.m;rnd()}}}
 function del(){let n=document.getElementById('sl').value;if(n&&confirm('?')){localStorage.removeItem(n);ls()}}
-function ls(){let s=document.getElementById('sl');s.innerHTML='';for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k.startsWith('bz2_')){let o=document.createElement('option');o.value=k;o.text=k.replace('bz2_','');s.appendChild(o)}}}
+function ls(){let s=document.getElementById('sl');s.innerHTML='';for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k.startsWith('bzFixed_')){let o=document.createElement('option');o.value=k;o.text=k.replace('bzFixed_','');s.appendChild(o)}}}
+
+// Rhythm Logic
 let rhythmInterval, isRhythmPlaying = false;
 const RHYTHMS = { 'zeibekiko': [1,0,0,2,0,1,0,2,0,2,0,0], 'aptaliko': [1,0,0,1,0,0,2,0,0], 'karsilamas': [1,0,2,0,2,0,1,0,0], 'kamilieriko': [1,0,0,2,0,0,1,0,2], 'tsamiko': [1,0,2,0,2,0], 'hasapiko': [1,0,2,0,1,0,2,0], 'hasaposirto': [1,0,2,0,2,0,1,0], 'sirto': [1,0,2,0,2,0,1,0], 'tsifteteli': [1,0,2,0,2,0,1,0,2,0,0,0], 'kalamatianos': [1,0,2,1,0,2,0], 'malfuf': [1,0,0,2], 'ayoub': [1,0,0,2], 'fox': [1,0,2,0,1,0,2,0], 'karachi': [2,0,1,0], 'laf': [1,0,2,0], 'maksum': [1,0,2,0,0,2,1,0,2,0,0,0], 'baladi': [1,0,1,0,0,2,1,0,0,0,2,0], 'saidi': [1,0,2,0,1,1,0,0,2,0,0,0], 'masmoudi': [1,0,1,0,0,0,2,0,1,0,0,0,2,0,0,0], 'samai': [1,0,0,2,0,1,0,2,0,0], 'rock': [1,0,2,0,1,0,2,0], 'waltz': [1,0,2,0,2,0], 'disco': [1,0,0,0,2,0,0,0], 'reggae': [0,0,2,0,1,0,2,0] };
 function toggleRhythm() { let p = document.getElementById('rhythmPanel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
