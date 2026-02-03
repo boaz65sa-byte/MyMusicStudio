@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boaz Virtual Band</title>
+    <style>
+        body { background:#121212; color:#eee; font-family:'Segoe UI',sans-serif; margin:0; height:100vh; display:flex; flex-direction:column; align-items:center; }
+        * { box-sizing:border-box; user-select:none; }
+
+        /* Top Bar */
+        .top-nav { width: 100%; max-width: 600px; padding: 10px; display: flex; justify-content: flex-end; }
+        .nav-btn { text-decoration:none; font-size:14px; background:#333; color:white; padding:5px 15px; border-radius:20px; border:1px solid #555; }
+
+        h1 { margin: 0; color: #ffb300; text-transform: uppercase; letter-spacing: 2px; font-size: 24px; text-shadow: 0 0 10px rgba(255, 179, 0, 0.3); }
+        
+        /* Main Controls */
+        .control-panel { 
+            background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; 
+            width: 95%; max-width: 600px; text-align: center; margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .select-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        select, input[type=number] { background: #333; color: #fff; border: 1px solid #555; padding: 8px; border-radius: 6px; font-size: 16px; outline: none; }
+        
+        /* Mixer Section */
+        .mixer { 
+            display: flex; justify-content: space-around; margin: 20px 0; 
+            background: #111; padding: 15px; border-radius: 8px; border: 1px solid #444;
+        }
+        
+        .channel { display: flex; flex-direction: column; align-items: center; width: 30%; }
+        .ch-label { color: #888; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .icon { font-size: 24px; margin-bottom: 10px; }
+        
+        /* Fader Style */
+        input[type=range][orient=vertical] {
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* WebKit */
+            width: 8px; height: 100px; padding: 0 5px;
+        }
+        
+        .mute-btn {
+            margin-top: 10px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555;
+            background: #222; color: #555; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .mute-btn.active { border-color: #f44336; color: #f44336; box-shadow: 0 0 10px rgba(244, 67, 54, 0.4); }
+        .mute-btn.on { border-color: #4caf50; color: #4caf50; box-shadow: 0 0 10px rgba(76, 175, 80, 0.4); }
+
+        /* Big Play Button */
+        .transport { margin-top: 20px; }
+        .play-btn {
+            width: 80px; height: 80px; border-radius: 50%; background: #ffb300; border: none;
+            font-size: 40px; color: black; box-shadow: 0 0 20px rgba(255, 179, 0, 0.4);
+            cursor: pointer; transition: 0.2s;
+        }
+        .play-btn:active { transform: scale(0.95); }
+        .play-btn.playing { background: #f44336; box-shadow: 0 0 20px rgba(244, 67, 54, 0.4); color: white; }
+
+        .led-bar { display: flex; gap: 5px; justify-content: center; margin-top: 20px; }
+        .led { width: 10px; height: 10px; background: #333; border-radius: 50%; }
+        .led.on { background: #00e676; box-shadow: 0 0 10px #00e676; }
+        .led.strong { width: 14px; height: 14px; border: 1px solid #666; }
+
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="index.html" class="nav-btn">🏠 חזרה לאולפן</a>
+    </div>
+
+    <h1>The Virtual Band</h1>
+
+    <div class="control-panel">
+        <div class="select-row">
+            <select id="styleSelect" onchange="resetSeq()">
+                <option value="zeibekiko">זייבקיקו (9/8)</option>
+                <option value="aptaliko">אפטליקו (9/8 הפוך)</option>
+                <option value="karsilamas">קרסילמס (9/8)</option>
+                <option value="tsamiko">צאמיקו (3/4)</option>
+                <option value="hasapiko">חספיקו (4/4)</option>
+                <option value="hasaposirto">חספוסירטו (2/4)</option>
+                <option value="tsifteteli">צפטטלי (4/4)</option>
+                <option value="kalamatianos">קלמטיאנוס (7/8)</option>
+                <option value="rock">רוק / פופ (4/4)</option>
+                <option value="waltz">ואלס (3/4)</option>
+            </select>
+            
+            <select id="keySelect" style="width: 80px;">
+                <option value="C">C</option><option value="C#">C#</option><option value="D" selected>D</option>
+                <option value="D#">D#</option><option value="E">E</option><option value="F">F</option>
+                <option value="F#">F#</option><option value="G">G</option><option value="G#">G#</option>
+                <option value="A">A</option><option value="A#">A#</option><option value="B">B</option>
+            </select>
+
+            <select id="scaleSelect">
+                <option value="major">מז'ור</option>
+                <option value="minor">מינור</option>
+                <option value="hitzaz">חיג'אז</option>
+                <option value="kourdi">כורדי</option>
+                <option value="sabah">סבא</option>
+            </select>
+        </div>
+
+        <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+            <span>BPM:</span>
+            <input type="range" id="bpmSlider" min="40" max="200" value="90" oninput="updateBpm(this.value)">
+            <span id="bpmDisplay" style="width:30px; font-weight:bold; color:#ffb300;">90</span>
+        </div>
+
+        <div class="mixer">
+            <div class="channel">
+                <div class="icon">🥁</div>
+                <div class="ch-label">Drums</div>
+                <button class="mute-btn on" id="muteDrums" onclick="toggleMute('drums')">ON</button>
+            </div>
+
+            <div class="channel">
+                <div class="icon">🎸</div>
+                <div class="ch-label">Bass</div>
+                <button class="mute-btn on" id="muteBass" onclick="toggleMute('bass')">ON</button>
+            </div>
+
+            <div class="channel">
+                <div class="icon">🎹</div>
+                <div class="ch-label">Chords</div>
+                <button class="mute-btn on" id="muteHarmony" onclick="toggleMute('harmony')">ON</button>
+            </div>
+        </div>
+
+        <div class="transport">
+            <button id="playBtn" class="play-btn" onclick="togglePlay()">▶</button>
+        </div>
+
+        <div class="led-bar" id="leds"></div>
+    </div>
+
+<script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    let isPlaying = false;
+    let timerID;
+    let currentBeat = 0;
+    let bpm = 90;
+    
+    // מצב ערוצים (true = מנגן)
+    let tracks = { drums: true, bass: true, harmony: true };
+
+    // נתונים מוזיקליים
+    const NOTE_FREQS = {
+        'C': 130.81, 'C#': 138.59, 'D': 146.83, 'D#': 155.56, 'E': 164.81, 'F': 174.61, 
+        'F#': 185.00, 'G': 196.00, 'G#': 207.65, 'A': 220.00, 'A#': 233.08, 'B': 246.94
+    };
+    
+    const SCALES = {
+        'major': [0, 4, 7], // Root, 3rd, 5th
+        'minor': [0, 3, 7],
+        'hitzaz': [0, 1, 4, 5, 7], // דומיננטי לחיג'אז
+        'kourdi': [0, 1, 3, 5, 7],
+        'sabah': [0, 1, 3, 4, 7]
+    };
+
+    // הגדרת מקצבים (Pattern Definition)
+    // 1 = Kick/Bass Root, 2 = Snare/Chord, 0 = Silence
+    // D = Downbeat (Strong), d = weak, T = Tak
+    const PATTERNS = {
+        'zeibekiko': { len: 9, drums: [1,0,0, 2,0, 1,0, 2,0], bass: [1,0,0, 5,0, 1,0, 5,0], chord: [1,0,0, 1,0, 0,0, 1,0] },
+        'aptaliko':  { len: 9, drums: [1,0,0, 1,0, 0,2, 0,0], bass: [1,0,0, 5,0, 0,5, 0,0], chord: [1,0,0, 1,0, 1,0, 0,0] },
+        'karsilamas':{ len: 9, drums: [1,0, 2,0, 2,0, 1,0,0], bass: [1,0, 5,0, 5,0, 1,0,0], chord: [1,0, 1,0, 1,0, 1,0,0] },
+        'tsamiko':   { len: 6, drums: [1,0, 2,0, 2,0], bass: [1,0, 5,0, 5,0], chord: [1,0, 1,0, 1,0] }, // 3/4 treated as 6/8
+        'hasapiko':  { len: 8, drums: [1,0, 2,0, 1,0, 2,0], bass: [1,0, 5,0, 1,0, 5,0], chord: [0,1, 0,1, 0,1, 0,1] },
+        'hasaposirto': { len: 4, drums: [1,0, 2,0], bass: [1,0, 5,0], chord: [0,1, 0,1] },
+        'tsifteteli':{ len: 8, drums: [1,0, 2,0, 2,0, 1,0], bass: [1,0, 5,0, 5,0, 1,0], chord: [1,0, 1,0, 1,0, 1,0] },
+        'kalamatianos': { len: 7, drums: [1,0, 2, 1,0, 2,0], bass: [1,0, 5, 1,0, 5,0], chord: [1,0, 1, 1,0, 1,0] },
+        'rock':      { len: 8, drums: [1,0, 2,0, 1,0, 2,0], bass: [1,0, 1,0, 1,0, 1,0], chord: [1,0, 1,0, 1,0, 1,0] },
+        'waltz':     { len: 6, drums: [1,0, 2,0, 2,0], bass: [1,0, 5,0, 5,0], chord: [1,0, 1,0, 1,0] }
+    };
+
+    function updateBpm(val) {
+        bpm = val;
+        document.getElementById('bpmDisplay').innerText = val;
+        if(isPlaying) {
+            clearInterval(timerID);
+            startLoop();
+        }
+    }
+
+    function toggleMute(track) {
+        tracks[track] = !tracks[track];
+        let btn = document.getElementById(track === 'drums' ? 'muteDrums' : track === 'bass' ? 'muteBass' : 'muteHarmony');
+        if(tracks[track]) {
+            btn.classList.add('on');
+            btn.innerText = "ON";
+        } else {
+            btn.classList.remove('on');
+            btn.innerText = "OFF";
+        }
+    }
+
+    function togglePlay() {
+        if (isPlaying) {
+            clearInterval(timerID);
+            isPlaying = false;
+            document.getElementById('playBtn').innerText = "▶";
+            document.getElementById('playBtn').classList.remove('playing');
+            resetLeds();
+        } else {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioCtx.resume();
+            isPlaying = true;
+            document.getElementById('playBtn').innerText = "■";
+            document.getElementById('playBtn').classList.add('playing');
+            currentBeat = 0;
+            updateLedsStructure();
+            startLoop();
+        }
+    }
+
+    function startLoop() {
+        let interval = (60000 / bpm) / 2; // בסיס של שמיניות (Eighth notes)
+        playStep(); // Beat 1 immediately
+        timerID = setInterval(playStep, interval);
+    }
+
+    function playStep() {
+        let style = document.getElementById('styleSelect').value;
+        let pattern = PATTERNS[style];
+        let stepIndex = currentBeat % pattern.len;
+
+        updateVisuals(stepIndex, pattern.len);
+
+        // Music Logic
+        let rootKey = document.getElementById('keySelect').value;
+        let scaleType = document.getElementById('scaleSelect').value;
+        let baseFreq = NOTE_FREQS[rootKey];
+
+        // 1. Drums
+        if(tracks.drums) {
+            let drumHit = pattern.drums[stepIndex];
+            if(drumHit === 1) playKick();
+            if(drumHit === 2) playSnare();
+        }
+
+        // 2. Bass (Monophonic Synth)
+        if(tracks.bass) {
+            let bassHit = pattern.bass[stepIndex];
+            if(bassHit === 1) playBassSynth(baseFreq); // Root
+            if(bassHit === 5) playBassSynth(baseFreq * 1.5); // Fifth
+        }
+
+        // 3. Harmony (Polyphonic Synth)
+        if(tracks.harmony) {
+            let chordHit = pattern.chord[stepIndex];
+            if(chordHit === 1) playChordSynth(baseFreq, scaleType);
+        }
+
+        currentBeat++;
+    }
+
+    // --- Sound Synthesis Engine ---
+
+    function playKick() {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        gain.gain.setValueAtTime(1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function playSnare() {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function playBassSynth(freq) {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = freq / 2; // אוקטבה למטה
+        
+        // Filter for bass sound
+        let filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 600;
+
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        
+        osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playChordSynth(rootFreq, scaleType) {
+        let intervals = SCALES[scaleType] || SCALES['major'];
+        // ננגן 3 תווים מהסולם (אקורד בסיסי)
+        // Root, 3rd index, 5th index from scale array roughly maps to Triad
+        let chordNotes = [rootFreq]; 
+        if(intervals.length > 2) chordNotes.push(rootFreq * Math.pow(2, intervals[1]/12)); // 3rd
+        if(intervals.length > 4) chordNotes.push(rootFreq * Math.pow(2, intervals[4]/12)); // 5th
+
+        chordNotes.forEach(f => {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'sine'; // צליל רך לליווי
+            osc.frequency.value = f;
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3); // Staccato chord
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        });
+    }
+
+    // --- Visuals ---
+    function updateLedsStructure() {
+        let style = document.getElementById('styleSelect').value;
+        let len = PATTERNS[style].len;
+        let container = document.getElementById('leds');
+        container.innerHTML = '';
+        for(let i=0; i<len; i++) {
+            let led = document.createElement('div');
+            led.className = 'led ' + (i===0 ? 'strong' : '');
+            led.id = 'led-'+i;
+            container.appendChild(led);
+        }
+    }
+
+    function updateVisuals(index, len) {
+        for(let i=0; i<len; i++) {
+            let led = document.getElementById('led-'+i);
+            if(led) {
+                if(i === index) led.classList.add('on');
+                else led.classList.remove('on');
+            }
+        }
+    }
+
+    function resetLeds() {
+        let leds = document.querySelectorAll('.led');
+        leds.forEach(l => l.classList.remove('on'));
+    }
+    
+    function resetSeq() {
+        if(isPlaying) {
+            togglePlay(); // Stop
+            setTimeout(togglePlay, 100); // Restart with new rhythm
+        } else {
+            updateLedsStructure();
+        }
+    }
+    
+    // Init leds
+    window.onload = updateLedsStructure;
+
+</script>
+</body>
+</html>
